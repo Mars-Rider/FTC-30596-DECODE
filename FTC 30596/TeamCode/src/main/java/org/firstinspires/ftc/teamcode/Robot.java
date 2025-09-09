@@ -38,30 +38,6 @@ public class Robot {
         LFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    double lowSpeed = 0.25;
-
-    /*public void drive(double x, double y, double rx, boolean speedButton){ //https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
-        y *= -1;
-        x *= 1.1;
-        double speed = 1;
-        if(!speedButton){
-            speed *= lowSpeed;
-        }
-
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double frontLeftPower = ((y + x + rx) / denominator);
-        double backLeftPower = ((y - x + rx) / denominator);
-        double frontRightPower = ((y - x - rx) / denominator);
-        double backRightPower = ((y + x - rx) / denominator);
-
-        LF.setPower(frontLeftPower*speed);
-        LB.setPower(backLeftPower*speed);
-        RF.setPower(frontRightPower*speed);
-        RB.setPower(backRightPower*speed);
-    }*/
-
-
-
     public void driveWithControllers(double forward, double strafe, double turn) {
         double avg = forward+strafe+turn;
 
@@ -71,7 +47,7 @@ public class Robot {
         RFB.setPower(forward);
         LRL.setPower(strafe);
         LFB.setPower(strafe);
-        
+
     }
 
 }
