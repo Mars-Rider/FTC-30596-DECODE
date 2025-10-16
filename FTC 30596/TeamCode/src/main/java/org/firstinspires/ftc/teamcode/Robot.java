@@ -39,15 +39,29 @@ public class Robot {
     }
 
     public void driveWithControllers(double forward, double strafe, double turn) {
-        double avg = forward+strafe+turn;
 
-        //double left = (forward*strafe*(Math.sin(Math.toRadians(225))*turn))/avg;
+        double A = forward - turn;
+        double B = forward + turn;
+        double RightPower = Math.hypot(strafe, A);
+        double LeftPower = Math.hypot(strafe, B);
+        double max = Math.max(1, Math.max(RightPower, LeftPower));
 
-        RRL.setPower(strafe);
-        RFB.setPower(forward);
-        LRL.setPower(strafe);
-        LFB.setPower(strafe);
+        controlRightPod(Math.atan2(strafe, A), RightPower/max);
+        controlLeftPod(Math.atan2(strafe, B), LeftPower/max);
+    }
 
+    public void controlRightPod(double Angle, double Power) {
+        double strafePower = Power * Math.cos(Angle);
+        double forwardPower = Power * Math.sin(Angle);
+        RRL.setPower(strafePower);
+        RFB.setPower(forwardPower);
+    }
+
+    public void controlLeftPod(double Angle, double Power) {
+        double strafePower = Power * Math.cos(Angle);
+        double forwardPower = Power * Math.sin(Angle);
+        LRL.setPower(strafePower);
+        LFB.setPower(forwardPower);
     }
 
 }
