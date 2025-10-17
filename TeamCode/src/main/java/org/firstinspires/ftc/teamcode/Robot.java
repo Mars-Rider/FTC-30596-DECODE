@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static android.os.SystemClock.sleep;
+
 import com.pedropathing.ftc.localization.RevHubIMU;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -28,10 +30,12 @@ public class Robot {
 
     public double driveSpeed = 0.5; //Default speed of drivetrain
     public double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
+    public boolean facingGoal = false; //If true, robot is facing the goal at all times and controls turn into global x and y, False is no more facing goal and it uses local driving
 
+    static public int alliance = 0; //0 = N/A, 1 = Blue, 2 = Red
     private int[] codeIDs = {21 , 22 , 23}; //Put the ids for each code here
     private int[][] codes = {{2,1,1},{1,2,1},{1,1,2}};
-    public int[] code; //0 = No ball, 1 = Purple, 2 = Green
+    static public int[] code; //0 = No ball, 1 = Purple, 2 = Green
     public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     private boolean fly = false; //True = on
@@ -110,7 +114,7 @@ public class Robot {
 
         //Limelights
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);// See limelight piplines (Whimsical)
+        limelight.pipelineSwitch(8);// See limelight piplines (Whimsical)
         limelight.start();
 
         //IMU - Localizer from LimeLight (Gets bot pos from the april tags - so tough)
@@ -139,7 +143,7 @@ public class Robot {
         return Math.abs(news) > analogThreshold;
     }
 
-    public void driveWithControllers(double forward, double strafe, double turn, boolean scale) {
+    /*public void driveWithControllers(double forward, double strafe, double turn, boolean scale) {
 
         double A = forward - turn;
         double B = forward + turn;
@@ -152,7 +156,7 @@ public class Robot {
 
         controlRightPod(Math.atan2(strafe, A), (RightPower/max) * scalar);
         controlLeftPod(Math.atan2(strafe, B), (LeftPower/max) * scalar);
-    }
+    }*/ //Pedro Teleop instead - just put all drive in the pedro
 
     public void controlRightPod(double Angle, double Power) {
         double strafePower = Power * Math.cos(Angle);
@@ -222,7 +226,7 @@ public class Robot {
             for (int color:code) {
                 outtake(color);
 
-                //Delay
+                sleep(500); //Wait 500ms then do the next one
             }
         }
 
@@ -254,8 +258,15 @@ public class Robot {
     public int closestColor() {
         HuskyLens.Block[] blocks = huskyLens.blocks();
         telemetry.addData("Block count", blocks.length);
-        for (int i = 0; i < blocks.length; i++) {
-            telemetry.addData("Block", blocks[i].toString());
+        int closest = 0;
+        int closestColor = 0;
+        for (HuskyLens.Block b : blocks) {
+            if(b.y + (b.height/2) > closest){ //Find color that is closest to the bottom ((0,0) is top left)
+                closest = b.y + (b.height/2);
+                closestColor = b.id;
+                //When setting the colors, id for purple is 1 and id for green id 2
+            }
+
             /*
              * Here inside the FOR loop, you could save or evaluate specific info for the currently recognized Bounding Box:
              * - blocks[i].width and blocks[i].height   (size of box, in pixels)
@@ -267,9 +278,7 @@ public class Robot {
              */
         }
 
-        return 1;//when purple
-        //return 2; //when green
-
+        return closestColor; //Return the color that comes
     } //Finds the closest color that is infront of the robot (Husky lens)
 
     public void sort() {
@@ -299,30 +308,32 @@ public class Robot {
     } //0 = No ball, 1 = Purple, 2 = Green
 
     //Limelight
-    public void readObleisk() {
-        int id = 0;
+    public void readFieldData() {
+        int codeID = 0;
+        int allianceID = 0;
 
         //Get data
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
         LLResult llResult = limelight.getLatestResult();
         if(llResult != null && llResult.isValid()){
-            id = llResult.getFiducialResults().get(0).getFiducialId();
+            codeID = llResult.getFiducialResults().get(0).getFiducialId();
+            allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
         }
 
+        if(allianceID == 20){alliance = 1;} else if (allianceID== 24){alliance = 2;}
+
         for (int i = 0; i < codeIDs.length; i++) {
-            if (codeIDs[i] == id) {
-                id = i;
+            if (codeIDs[i] == codeID) {
+                codeID = i;
                 break;// return index when found
             }
         }
 
-        code = codes[id];
+        code = codes[codeID];
     } //Sets the code
     public void faceGoal() {}//Track april tag
     public void estimatePower() {} //Find distance and get needed power
-    public void allianceColor() {//find closest id that is not a code id
-    }
 
     public void start(){
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
@@ -334,9 +345,11 @@ public class Robot {
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
         }
+
+        readFieldData();
     } //Put things to do in the loop here
 
-    public void loop(){
+    public void update(){
         incremented = false;
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
@@ -349,6 +362,10 @@ public class Robot {
             telemetry.addData("Ta", llResult.getTa());
         }
 
-        //sort();
+        if(facingGoal){
+            faceGoal();
+        }
+
+        sort();
     } //Put things to do in the loop here
 }

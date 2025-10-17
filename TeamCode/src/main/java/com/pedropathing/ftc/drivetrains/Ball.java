@@ -174,6 +174,8 @@ public class Ball extends Drivetrain {
         wheelPowers[3] = (mecanumVectorsCopy[2].getXComponent() * truePathingVectors[1].getYComponent() - truePathingVectors[1].getXComponent() * mecanumVectorsCopy[2].getYComponent()) / (mecanumVectorsCopy[2].getXComponent() * mecanumVectorsCopy[3].getYComponent() - mecanumVectorsCopy[3].getXComponent() * mecanumVectorsCopy[2].getYComponent());*/
 
 
+
+
         if (voltageCompensation) {
             double voltageNormalized = getVoltageNormalized();
             for (int i = 0; i < wheelPowers.length; i++) {
