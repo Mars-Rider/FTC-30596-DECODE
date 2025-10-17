@@ -1,11 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.pedropathing.ftc.localization.RevHubIMU;
+import com.qualcomm.hardware.dfrobot.HuskyLens;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class Robot {
     public HardwareMap map;
@@ -15,23 +23,41 @@ public class Robot {
     public DcMotor pFly, gFly, intake;
     public Servo sort;
 
+    private double sortMid = 0.5;
+    private double sortInc = 0.2;
+
     public double driveSpeed = 0.5; //Default speed of drivetrain
     public double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
 
-    public int code[3]; //0 = No ball, 1 = Purple, 2 = Green
-    public int loaded[3] = [0, 0, 0]; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
+    private int[] codeIDs = {21 , 22 , 23}; //Put the ids for each code here
+    private int[][] codes = {{2,1,1},{1,2,1},{1,1,2}};
+    public int[] code; //0 = No ball, 1 = Purple, 2 = Green
+    public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
-    public boolean fly = false; //True = on
-    public double flySpeed = 0.5; //Default speed of flywheel
+    private boolean fly = false; //True = on
+    private double dFlySpeed = 0.5; //Default speed of flywheel
+    public double flySpeed = 0.5; //Speed of flywheel
     public double flySpeedIncre = 0.1; //Default increase/dececrease of the speed of flywheel
-    public Servo pRoll[3]; //Purple Ball Rollers
-    public Servo gRoll[3]; //Green Ball Rollers
+    public boolean incremented = false;
+    private Servo[] pRoll; //Purple Ball Rollers
+    private Servo[] gRoll; //Green Ball Rollers
+    private double rollSpeed = 0.75; //Speed of the rollers
+    private boolean intakeOn = false; //True = on
+    private double intakeSpeed = 0.5; //Speed of intake
+
+    private HuskyLens huskyLens;
+    private Limelight3A limelight;
+    private IMU imu;
 
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         this.map = hardwareMap;
 
-        code[1] == null ? code[3] = [0, 0, 0];
+        if(code[1] != 0 && code[1] != 1 && code[1] != 2) {
+            code[0] = 0;
+            code[1] = 0;
+            code[2] = 0;
+        }
 
         //Drivetrain
         LRL = hardwareMap.get(DcMotor.class, "LRL");//2 C (Port 2, Control Hub Motors)
@@ -43,27 +69,54 @@ public class Robot {
         pFly = hardwareMap.get(DcMotor.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
         gFly = hardwareMap.get(DcMotor.class, "gFly");//1 E
 
+        //Rollers
+        pRoll[0] = hardwareMap.get(Servo.class, "pR1");//1 ES
+        pRoll[1] = hardwareMap.get(Servo.class, "pR2");//2 ES
+        gRoll[0] = hardwareMap.get(Servo.class, "gR1");//4 ES
+        gRoll[1] = hardwareMap.get(Servo.class, "gR2");//5 ES
+
         //Intake
-        RFB = hardwareMap.get(DcMotor.class, "RFB");//3 E
+        intake = hardwareMap.get(DcMotor.class, "intake");//3 E
         sort = hardwareMap.get(Servo.class, "sort");//3 ES (Port 3, Expansion Hub Servo Slots)
+        sort.setDirection(Servo.Direction.FORWARD);
 
         LRL.setDirection(DcMotor.Direction.FORWARD);
         LFB.setDirection(DcMotor.Direction.FORWARD);
         RRL.setDirection(DcMotor.Direction.REVERSE);
         RFB.setDirection(DcMotor.Direction.REVERSE);
+        intake.setDirection(DcMotor.Direction.FORWARD);
+        pFly.setDirection(DcMotor.Direction.FORWARD);
+        gFly.setDirection(DcMotor.Direction.FORWARD);
 
         RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        pFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        gFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         RRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        pFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        gFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         //Huksy Lens
+        huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
+        huskyLens.selectAlgorithm(HuskyLens.Algorithm.COLOR_RECOGNITION);
+
         //Limelights
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);// See limelight piplines (Whimsical)
+        limelight.start();
+
+        //IMU - Localizer from LimeLight (Gets bot pos from the april tags - so tough)
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
     }
 
     public double overide (double primary, double override){
@@ -80,6 +133,11 @@ public class Robot {
             return primary;
         }
     }
+    public boolean triggerAsButton(double news){
+        double analogThreshold = 0.25;
+
+        return Math.abs(news) > analogThreshold;
+    }
 
     public void driveWithControllers(double forward, double strafe, double turn, boolean scale) {
 
@@ -90,7 +148,7 @@ public class Robot {
         double max = Math.max(1, Math.max(RightPower, LeftPower));
 
         double scalar;
-        if(scale){scalar=driveSpeed}else{scalar=driveSpeedSlow}
+        if(scale){scalar=driveSpeed;}else{scalar=driveSpeedSlow;}
 
         controlRightPod(Math.atan2(strafe, A), (RightPower/max) * scalar);
         controlLeftPod(Math.atan2(strafe, B), (LeftPower/max) * scalar);
@@ -111,23 +169,27 @@ public class Robot {
     }
 
     //Flywheels
-    public void power() {
+    public void flyPower() {
         if(!fly){
-            //Turn on power
+            pFly.setPower(flySpeed);
+            gFly.setPower(flySpeed);
             fly = true;
         } else {
-            //Turn off power
+            pFly.setPower(0);
+            gFly.setPower(0);
             fly = false;
         }
     } //Turn on and off power of flywheel
 
-    public void power(boolean manual) { //True is on, false is off
+    public void flyPower(boolean manual) { //True is on, false is off
         if(fly != manual){ //Only go forward if manual isn't the same as fly
-            if(manual){ //True is on
-                //turn on power
-                fly = false;
+            if(manual){//True is on
+                pFly.setPower(flySpeed);
+                gFly.setPower(flySpeed);
+                fly = true;
             } else {
-                //Turn off power
+                pFly.setPower(0);
+                gFly.setPower(0);
                 fly = false;
             }
         }
@@ -135,42 +197,158 @@ public class Robot {
 
     public void outtake(int color) {
         if(!fly){
-            power();
+            flyPower(true);
             if(color == 1) { //Purple
-
+                for (Servo servo : pRoll) {
+                    servo.setPosition(rollSpeed);
+                }
             } else if (color == 2) { // Green
-
+                for (Servo servo : gRoll) {
+                    servo.setPosition(rollSpeed);
+                }
             }
         }
     } //Turn on power if needed and spin rollers based on the color
+
     public void outtakeByCode() {
         int totLoad = 0;
         int totCode = 0;
         for (int l = 0; l < loaded.length; l++) {
-            loaded[i-1] ! = 0 ? totLoad+loaded[i-1];
-            code[i-1] != 0 ? totCode+code[i-1]
+            if(loaded[l] != 0) {totLoad += loaded[l];}
+            if(code[l] != 0) { totCode += code[l];}
         }
 
         if(totLoad == totCode){
-            for (int i = 0; i < code.length; i++) {
-                if(code[i-1] == 1) {//Purple
-                    outtake(1);
-                } else if (code[i-1] == 2) {//Green
-                    outtake(2);
-                }
+            for (int color:code) {
+                outtake(color);
 
-                //delay somehow
+                //Delay
             }
         }
 
     } //Automatically shoots by the code
 
     //Intake
-    public void closestColor() {} //Finds the closest color that is infront of the robot (Husky lens)
-    public void sort(int color) {} //0 = No ball, 1 = Purple, 2 = Green
+    public void intakePower() {
+        if(!intakeOn){
+            intake.setPower(intakeSpeed);
+            intakeOn = true;
+        } else {
+            intake.setPower(0);
+            intakeOn = false;
+        }
+    } //Turn on and off power of intake
+
+    public void intakePower(boolean manual) { //True is on, false is off
+        if(intakeOn != manual){ //Only go forward if manual isn't the same as fly
+            if(manual){//True is on
+                intake.setPower(intakeSpeed);
+                intakeOn = true;
+            } else {
+                intake.setPower(0);
+                intakeOn = false;
+            }
+        }
+    } //Turn on and off power of intake based off of what the input is
+
+    public int closestColor() {
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        telemetry.addData("Block count", blocks.length);
+        for (int i = 0; i < blocks.length; i++) {
+            telemetry.addData("Block", blocks[i].toString());
+            /*
+             * Here inside the FOR loop, you could save or evaluate specific info for the currently recognized Bounding Box:
+             * - blocks[i].width and blocks[i].height   (size of box, in pixels)
+             * - blocks[i].left and blocks[i].top       (edges of box)
+             * - blocks[i].x and blocks[i].y            (center location)
+             * - blocks[i].id                           (Color ID)
+             *
+             * These values have Java type int (integer).
+             */
+        }
+
+        return 1;//when purple
+        //return 2; //when green
+
+    } //Finds the closest color that is infront of the robot (Husky lens)
+
+    public void sort() {
+        intakePower(true);
+
+        int color = closestColor();
+
+        if(color == 1){
+            sort.setPosition(sortMid+sortInc);
+            return;
+        }else if (color == 2){
+            sort.setPosition(sortMid-sortInc);
+            return;
+        }
+    }
+
+    public void sort(int color) {
+        intakePower(true);
+
+        if(color == 1){
+            sort.setPosition(sortMid+sortInc);
+            return;
+        }else if (color == 2){
+            sort.setPosition(sortMid-sortInc);
+            return;
+        }
+    } //0 = No ball, 1 = Purple, 2 = Green
 
     //Limelight
-    public void readObleisk() {}
-    public void faceGoal() {}
+    public void readObleisk() {
+        int id = 0;
+
+        //Get data
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+        if(llResult != null && llResult.isValid()){
+            id = llResult.getFiducialResults().get(0).getFiducialId();
+        }
+
+        for (int i = 0; i < codeIDs.length; i++) {
+            if (codeIDs[i] == id) {
+                id = i;
+                break;// return index when found
+            }
+        }
+
+        code = codes[id];
+    } //Sets the code
+    public void faceGoal() {}//Track april tag
     public void estimatePower() {} //Find distance and get needed power
+    public void allianceColor() {//find closest id that is not a code id
+    }
+
+    public void start(){
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+        if(llResult != null && llResult.isValid()){
+            Pose3D botPose = llResult.getBotpose_MT2(); //Get position in relation to april tag (i think 90 is straight on)
+            telemetry.addData("Tx", llResult.getTx());
+            telemetry.addData("Ty", llResult.getTy());
+            telemetry.addData("Ta", llResult.getTa());
+        }
+    } //Put things to do in the loop here
+
+    public void loop(){
+        incremented = false;
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+        if(llResult != null && llResult.isValid()){
+            Pose3D botPose = llResult.getBotpose_MT2(); //Get position in relation to april tag (i think 90 is straight on)
+            telemetry.addData("Tx", llResult.getTx());
+            telemetry.addData("Ty", llResult.getTy());
+            telemetry.addData("Ta", llResult.getTa());
+        }
+
+        //sort();
+    } //Put things to do in the loop here
 }
