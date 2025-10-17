@@ -93,8 +93,8 @@ public class AbstractBijectiveMap<T, S> implements BijectiveMap<T, S> {
              * @return the closest key within the threshold, or NaN if no key is found within the threshold
              */
             private double findClosestInput(double key, double threshold) {
-                Map.Entry<Double, Double> lowerVal = floorEntry(key);
-                Map.Entry<Double, Double> higherVal = ceilingEntry(key);
+                Entry<Double, Double> lowerVal = floorEntry(key);
+                Entry<Double, Double> higherVal = ceilingEntry(key);
 
                 if (lowerVal == null && higherVal == null) {
                     return Double.NaN; // No keys available
@@ -120,8 +120,8 @@ public class AbstractBijectiveMap<T, S> implements BijectiveMap<T, S> {
              * @return the closest key, or NaN if no keys are available
              */
             private double findClosestInput(double key) {
-                Map.Entry<Double, Double> lowerVal = floorEntry(key);
-                Map.Entry<Double, Double> higherVal = ceilingEntry(key);
+                Entry<Double, Double> lowerVal = floorEntry(key);
+                Entry<Double, Double> higherVal = ceilingEntry(key);
 
                 if (lowerVal == null && higherVal == null) {
                     return Double.NaN; // No keys available
@@ -146,8 +146,8 @@ public class AbstractBijectiveMap<T, S> implements BijectiveMap<T, S> {
              * @return the interpolated value, or NaN if no keys are available
              */
             private double interpolate(double key) {
-                Map.Entry<Double, Double> lowerEntry = floorEntry(key);
-                Map.Entry<Double, Double> higherEntry = ceilingEntry(key);
+                Entry<Double, Double> lowerEntry = floorEntry(key);
+                Entry<Double, Double> higherEntry = ceilingEntry(key);
 
                 if (lowerEntry == null && higherEntry == null) {
                     return Double.NaN; // No keys available
