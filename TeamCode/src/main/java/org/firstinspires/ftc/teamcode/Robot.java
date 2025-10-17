@@ -15,17 +15,17 @@ public class Robot {
     public DcMotor pFly, gFly, intake;
     public Servo sort;
 
-    public int driveSpeed = 0.5; //Default speed of drivetrain
-    public int driveSpeedSlow = 0.1 //Speed of drivetrain when in slow mode
+    public double driveSpeed = 0.5; //Default speed of drivetrain
+    public double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
 
     public int code[3]; //0 = No ball, 1 = Purple, 2 = Green
     public int loaded[3] = [0, 0, 0]; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     public boolean fly = false; //True = on
-    public int flySpeed = 0.5; //Default speed of flywheel
-    public int flySpeedIncre = 0.1 //Default increase/dececrease of the speed of flywheel
-    public Servo[3] pRoll; //Purple Ball Rollers
-    public Servo[3] gRoll; //Green Ball Rollers
+    public double flySpeed = 0.5; //Default speed of flywheel
+    public double flySpeedIncre = 0.1; //Default increase/dececrease of the speed of flywheel
+    public Servo pRoll[3]; //Purple Ball Rollers
+    public Servo gRoll[3]; //Green Ball Rollers
 
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -45,7 +45,7 @@ public class Robot {
 
         //Intake
         RFB = hardwareMap.get(DcMotor.class, "RFB");//3 E
-        Grab = hardwareMap.get(Servo.class, "sort");//3 ES (Port 3, Expansion Hub Servo Slots)
+        sort = hardwareMap.get(Servo.class, "sort");//3 ES (Port 3, Expansion Hub Servo Slots)
 
         LRL.setDirection(DcMotor.Direction.FORWARD);
         LFB.setDirection(DcMotor.Direction.FORWARD);
@@ -90,7 +90,7 @@ public class Robot {
         double max = Math.max(1, Math.max(RightPower, LeftPower));
 
         double scalar;
-        if(scale){scalar=dDriveSpeed}else{scalar=driveSpeedSlow}
+        if(scale){scalar=driveSpeed}else{scalar=driveSpeedSlow}
 
         controlRightPod(Math.atan2(strafe, A), (RightPower/max) * scalar);
         controlLeftPod(Math.atan2(strafe, B), (LeftPower/max) * scalar);
