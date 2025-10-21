@@ -69,12 +69,12 @@ public class TeleOpMode extends LinearOpMode{
                         -gamepad1.right_stick_x * robot.driveSpeedSlow,
                         true // Robot Centric
                 );
-            //}
+            //}if(gamepad1.y){robot.outtakeByCode();}
+            ////            if(gamepad1.x){robot.outtake(1);}//Purple
+            ////            if(gamepad1.b){robot.outtake(2);}//Green
             //robot.driveWithControllers(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, gamepad1.right_bumper);
 
-            if(gamepad1.y){robot.outtakeByCode();}
-            if(gamepad1.x){robot.outtake(1);}//Purple
-            if(gamepad1.b){robot.outtake(2);}//Green
+//
 
             if(gamepad1.dpad_up){if(robot.facingGoal!=true){robot.facingGoal = true;}else{robot.facingGoal = false;}}
 

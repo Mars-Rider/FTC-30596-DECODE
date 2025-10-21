@@ -1,6 +1,6 @@
 package com.pedropathing.math;
 
-import org.jetbrains.annotations.NotNull;
+//import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -508,7 +508,6 @@ public class Matrix {
      * Build a string that represents the elements of the matrix
      * @return String obj
      */
-    @NotNull
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder("[");
