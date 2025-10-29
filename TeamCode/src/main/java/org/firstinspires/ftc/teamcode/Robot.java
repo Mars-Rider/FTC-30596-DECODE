@@ -25,6 +25,8 @@ public class Robot {
     public DcMotor pFly, gFly, intake;
     public Servo sort;
 
+    public int robotHeight = 1;
+
     private double sortMid = 0.5;
     private double sortInc = 0.2;
 
@@ -293,10 +295,10 @@ public class Robot {
 
         int color = closestColor();
 
-        if(color == 1){
+        if(color == 1){ // purple
             sort.setPosition(sortMid+sortInc);
             return;
-        }else if (color == 2){
+        }else if (color == 2){ //green
             sort.setPosition(sortMid-sortInc);
             return;
         }

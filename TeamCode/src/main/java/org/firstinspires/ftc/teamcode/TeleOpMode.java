@@ -27,6 +27,8 @@ public class TeleOpMode extends LinearOpMode{
         //Run at Initialization
         Robot robot = new Robot(hardwareMap, telemetry);
 
+        robot.robotHeight;
+
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
