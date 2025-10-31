@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 
 @TeleOp
 public class Testing extends LinearOpMode{
-    DcMotor motor;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -37,8 +36,6 @@ public class Testing extends LinearOpMode{
 
         waitForStart();
         //On Start
-
-        motor.setPower(1);
 
         if (isStopRequested()) return;
 
@@ -74,11 +71,14 @@ public class Testing extends LinearOpMode{
 
             if(closestColor == 1){
                 sort.setPosition(sortMid+sortInc);
-                return;
+                telemetry.addLine("Closest Color: Purple");
             }else if (closestColor == 2){
                 sort.setPosition(sortMid-sortInc);
-                return;
+                telemetry.addLine("Closest Color: Green");
+            } else {
+                telemetry.addLine("Closest Color: N/a");
             }
+            telemetry.update();
         }
     }
 }

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import static android.os.SystemClock.sleep;
 
 import com.pedropathing.ftc.localization.RevHubIMU;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -17,6 +18,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
+import org.firstinspires.ftc.teamcode.Globals;
+
 public class Robot {
     public HardwareMap map;
     public final Telemetry telemetry;
@@ -25,7 +28,8 @@ public class Robot {
     public DcMotor pFly, gFly, intake;
     public Servo sort;
 
-    public int robotHeight = 1;
+    public Pose startPose;
+    public boolean opMode = false; //True is auton
 
     private double sortMid = 0.5;
     private double sortInc = 0.2;
@@ -34,11 +38,11 @@ public class Robot {
     public double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
     public boolean facingGoal = false; //If true, robot is facing the goal at all times and controls turn into global x and y, False is no more facing goal and it uses local driving
 
-    static public int alliance = 0; //0 = N/A, 1 = Blue, 2 = Red
+    //static public int alliance = 0; //0 = N/A, 1 = Blue, 2 = Red
     private int[] codeIDs = {21 , 22 , 23}; //Put the ids for each code here
     private int[][] codes = {{2,1,1},{1,2,1},{1,1,2}};
-    static public int[] code = {4,4,4}; //0 = No ball, 1 = Purple, 2 = Green
-    public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
+    //static public int[] code = {4,4,4}; //0 = No ball, 1 = Purple, 2 = Green
+    // public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     private boolean fly = false; //True = on
     private double dFlySpeed = 0.5; //Default speed of flywheel
@@ -59,12 +63,6 @@ public class Robot {
         this.telemetry = telemetry;
         this.map = hardwareMap;
 
-        if(code[1] != 0 && code[1] != 1 && code[1] != 2) {
-            code[0] = 0;
-            code[1] = 0;
-            code[2] = 0;
-        }
-
         //Drivetrain
         LRL = hardwareMap.get(DcMotor.class, "LRL");//2 C (Port 2, Control Hub Motors)
         LFB = hardwareMap.get(DcMotor.class, "LFB");//0 C
@@ -72,14 +70,14 @@ public class Robot {
         RFB = hardwareMap.get(DcMotor.class, "RFB");//1 C
 
         //Flywheels
-        //pFly = hardwareMap.get(DcMotor.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
-        //gFly = hardwareMap.get(DcMotor.class, "gFly");//1 E
+        pFly = hardwareMap.get(DcMotor.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
+        gFly = hardwareMap.get(DcMotor.class, "gFly");//1 E
 
         //Rollers
-        //pRoll[0] = hardwareMap.get(Servo.class, "pR1");//1 ES
-        //pRoll[1] = hardwareMap.get(Servo.class, "pR2");//2 ES
-        //gRoll[0] = hardwareMap.get(Servo.class, "gR1");//4 ES
-        //gRoll[1] = hardwareMap.get(Servo.class, "gR2");//5 ES
+        pRoll[0] = hardwareMap.get(Servo.class, "pR1");//1 ES
+        pRoll[1] = hardwareMap.get(Servo.class, "pR2");//2 ES
+        gRoll[0] = hardwareMap.get(Servo.class, "gR1");//4 ES
+        gRoll[1] = hardwareMap.get(Servo.class, "gR2");//5 ES
 
         //Intake
         //intake = hardwareMap.get(DcMotor.class, "intake");//3 E
@@ -114,10 +112,9 @@ public class Robot {
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
         huskyLens.selectAlgorithm(HuskyLens.Algorithm.COLOR_RECOGNITION);
 
-        //Limelights
-//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-//        limelight.pipelineSwitch(8);// See limelight piplines (Whimsical)
-//        limelight.start();
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(8);// Pipelight for April Tags
+        limelight.start();
 
         //IMU - Localizer from LimeLight (Gets bot pos from the april tags - so tough)
         imu = hardwareMap.get(IMU.class, "imu");
@@ -175,64 +172,64 @@ public class Robot {
     }
 
 //    //Flywheels
-//    public void flyPower() {
-//        if(!fly){
-//            pFly.setPower(flySpeed);
-//            gFly.setPower(flySpeed);
-//            fly = true;
-//        } else {
-//            pFly.setPower(0);
-//            gFly.setPower(0);
-//            fly = false;
-//        }
-//    } //Turn on and off power of flywheel
-//
-//    public void flyPower(boolean manual) { //True is on, false is off
-//        if(fly != manual){ //Only go forward if manual isn't the same as fly
-//            if(manual){//True is on
-//                pFly.setPower(flySpeed);
-//                gFly.setPower(flySpeed);
-//                fly = true;
-//            } else {
-//                pFly.setPower(0);
-//                gFly.setPower(0);
-//                fly = false;
-//            }
-//        }
-//    } //Turn on and off power of flywheel based off of what the input is
-//
-//    public void outtake(int color) {
-//        if(!fly){
-//            flyPower(true);
-//            if(color == 1) { //Purple
-//                for (Servo servo : pRoll) {
-//                    servo.setPosition(rollSpeed);
-//                }
-//            } else if (color == 2) { // Green
-//                for (Servo servo : gRoll) {
-//                    servo.setPosition(rollSpeed);
-//                }
-//            }
-//        }
-//    } //Turn on power if needed and spin rollers based on the color
-//
-//    public void outtakeByCode() {
-//        int totLoad = 0;
-//        int totCode = 0;
-//        for (int l = 0; l < loaded.length; l++) {
-//            if(loaded[l] != 0) {totLoad += loaded[l];}
-//            if(code[l] != 0) { totCode += code[l];}
-//        }
-//
-//        if(totLoad == totCode){
-//            for (int color:code) {
-//                outtake(color);
-//
-//                sleep(500); //Wait 500ms then do the next one
-//            }
-//        }
-//
-//    } //Automatically shoots by the code
+    public void flyPower() {
+        if(!fly){
+            pFly.setPower(flySpeed);
+            gFly.setPower(flySpeed);
+            fly = true;
+        } else {
+            pFly.setPower(0);
+            gFly.setPower(0);
+            fly = false;
+        }
+    } //Turn on and off power of flywheel
+
+    public void flyPower(boolean manual) { //True is on, false is off
+        if(fly != manual){ //Only go forward if manual isn't the same as fly
+            if(manual){//True is on
+                pFly.setPower(flySpeed);
+                gFly.setPower(flySpeed);
+                fly = true;
+            } else {
+                pFly.setPower(0);
+                gFly.setPower(0);
+                fly = false;
+            }
+        }
+    } //Turn on and off power of flywheel based off of what the input is
+
+    public void outtake(int color) {
+        if(!fly){
+            flyPower(true);
+            if(color == 1) { //Purple
+                for (Servo servo : pRoll) {
+                    servo.setPosition(rollSpeed);
+                }
+            } else if (color == 2) { // Green
+                for (Servo servo : gRoll) {
+                    servo.setPosition(rollSpeed);
+                }
+            }
+        }
+    } //Turn on power if needed and spin rollers based on the color
+
+    public void outtakeByCode() {
+        int totLoad = 0;
+        int totCode = 0;
+        for (int l = 0; l < Globals.loaded.length; l++) {
+            if(Globals.loaded[l] != 0) {totLoad += Globals.loaded[l];}
+            if(Globals.code[l] != 0) { totCode += Globals.code[l];}
+        }
+
+        if(totLoad == totCode){
+            for (int color:Globals.code) {
+                outtake(color);
+
+                sleep(500); //Wait 500ms then do the next one
+            }
+        }
+
+    } //Automatically shoots by the code
 
     //Intake
     public void intakePower() {
@@ -322,58 +319,48 @@ public class Robot {
         int allianceID = 0;
 
         //Get data
-//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-//        limelight.updateRobotOrientation(orientation.getYaw());
-//        LLResult llResult = limelight.getLatestResult();
-//        if(llResult != null && llResult.isValid()){
-//            codeID = llResult.getFiducialResults().get(0).getFiducialId();
-//            allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
-//        }
-//
-//        if(allianceID == 20){alliance = 1;} else if (allianceID== 24){alliance = 2;}
-//
-//        for (int i = 0; i < codeIDs.length; i++) {
-//            if (codeIDs[i] == codeID) {
-//                codeID = i;
-//                break;// return index when found
-//            }
-//        }
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+        Pose3D botPose = null;
+        if(llResult != null && llResult.isValid()){
+            botPose = llResult.getBotpose(); //Get position in relation to april tag (i think 90 is straight on)
+            telemetry.addData("Tx", llResult.getTx());
+            telemetry.addData("Ty", llResult.getTy());
+            telemetry.addData("Ta", llResult.getTa());
 
-        code = codes[codeID];
+            codeID = llResult.getFiducialResults().get(0).getFiducialId();
+            allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
+        }
+
+        if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
+
+        for (int i = 0; i < codeIDs.length; i++) {
+            if (codeIDs[i] == codeID) {
+                codeID = i;
+                break;// return index when found
+            }
+        }
+
+        Globals.code = codes[codeID];
+
+        if(opMode && botPose != null){
+            startPose = new Pose(
+                    botPose.getPosition().x,
+                    botPose.getPosition().y,
+                    botPose.getOrientation().getYaw()
+            );
+        }
     } //Sets the code
     public void faceGoal() {}//Track april tag
     public void estimatePower() {} //Find distance and get needed power
 
     public void start(){
-//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-//        limelight.updateRobotOrientation(orientation.getYaw());
-//        LLResult llResult = limelight.getLatestResult();
-//        if(llResult != null && llResult.isValid()){
-//            Pose3D botPose = llResult.getBotpose_MT2(); //Get position in relation to april tag (i think 90 is straight on)
-//            telemetry.addData("Tx", llResult.getTx());
-//            telemetry.addData("Ty", llResult.getTy());
-//            telemetry.addData("Ta", llResult.getTa());
-//        }
-//
-//        readFieldData();
+        readFieldData();
     } //Put things to do in the loop here
 
     public void update(){
         incremented = false;
-
-//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-//        limelight.updateRobotOrientation(orientation.getYaw());
-//        LLResult llResult = limelight.getLatestResult();
-//        if(llResult != null && llResult.isValid()){
-//            Pose3D botPose = llResult.getBotpose_MT2(); //Get position in relation to april tag (i think 90 is straight on)
-//            telemetry.addData("Tx", llResult.getTx());
-//            telemetry.addData("Ty", llResult.getTy());
-//            telemetry.addData("Ta", llResult.getTa());
-//        }
-//
-//        if(facingGoal){
-//            faceGoal();
-//        }
 
         sort();
     } //Put things to do in the loop here
