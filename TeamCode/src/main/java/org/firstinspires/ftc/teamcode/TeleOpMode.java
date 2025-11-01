@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 @TeleOp
 public class TeleOpMode extends LinearOpMode{
     private Follower follower;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
     //private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private boolean slowMode = false;
@@ -28,7 +27,7 @@ public class TeleOpMode extends LinearOpMode{
         Robot robot = new Robot(hardwareMap, telemetry);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        follower.setStartingPose(Globals.startPose == null ? new Pose() : Globals.startPose);
         follower.update();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))

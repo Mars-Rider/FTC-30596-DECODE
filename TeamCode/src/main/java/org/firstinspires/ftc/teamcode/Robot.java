@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static android.os.SystemClock.sleep;
 
+import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.ftc.localization.RevHubIMU;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
@@ -28,7 +29,6 @@ public class Robot {
     public DcMotor pFly, gFly, intake;
     public Servo sort;
 
-    public Pose startPose;
     public boolean opMode = false; //True is auton
 
     private double sortMid = 0.5;
@@ -57,6 +57,7 @@ public class Robot {
 
     private HuskyLens huskyLens;
     private Limelight3A limelight;
+    LLResult llResult;
     private IMU imu;
 
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -321,7 +322,7 @@ public class Robot {
         //Get data
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
-        LLResult llResult = limelight.getLatestResult();
+        llResult = limelight.getLatestResult();
         Pose3D botPose = null;
         if(llResult != null && llResult.isValid()){
             botPose = llResult.getBotpose(); //Get position in relation to april tag (i think 90 is straight on)
@@ -333,8 +334,6 @@ public class Robot {
             allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
         }
 
-        if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
-
         for (int i = 0; i < codeIDs.length; i++) {
             if (codeIDs[i] == codeID) {
                 codeID = i;
@@ -342,18 +341,48 @@ public class Robot {
             }
         }
 
-        Globals.code = codes[codeID];
+        if (Globals.code[0] == 0){
+            Globals.code = codes[codeID];
+        }
+
+        if(Globals.alliance == 0){
+            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
+        }
 
         if(opMode && botPose != null){
-            startPose = new Pose(
+            Globals.startPose = new Pose(
                     botPose.getPosition().x,
                     botPose.getPosition().y,
-                    botPose.getOrientation().getYaw()
+                    botPose.getOrientation().getYaw(), FTCCoordinates.INSTANCE
             );
         }
     } //Sets the code
     public void faceGoal() {}//Track april tag
-    public void estimatePower() {} //Find distance and get needed power
+    public void estimatePower() {
+        //Get data
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        llResult = limelight.getLatestResult();
+        Pose3D botPose = null;
+        if(llResult != null && llResult.isValid()){
+            for (List<llResult.FiducialResult> fiducial:
+            llResult.getFiducialResults()) {
+
+                llResult.getFiducialResults();
+
+                limelight.net
+
+            }
+
+            botPose = llResult.getBotpose(); //Get position in relation to april tag (i think 90 is straight on)
+            telemetry.addData("Tx", llResult.getTx());
+            telemetry.addData("Ty", llResult.getTy());
+            telemetry.addData("Ta", llResult.getTa());
+
+
+        }
+        double distance = Math.sqrt(x*x + y*y + z*z);
+    } //Find distance and get needed power
 
     public void start(){
         readFieldData();

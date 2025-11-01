@@ -1,7 +1,8 @@
-package org.firstinspires.ftc.teamcode.pedroPathing; // make sure this aligns with class location
+package org.firstinspires.ftc.teamcode.pedroAutons; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
@@ -9,12 +10,12 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.Globals;
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "Example Auto", group = "Examples")
 public class SampleAuto extends OpMode {
-
-    Robot robot = new Robot(hardwareMap, telemetry);
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -194,13 +195,15 @@ public class SampleAuto extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        Robot robot = new Robot(hardwareMap, telemetry);
+        robot.opMode = true;
+
         robot.readFieldData();
-        startPose = robot.startPose;
+        startPose = Globals.startPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE);
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
-
     }
 
     /**
