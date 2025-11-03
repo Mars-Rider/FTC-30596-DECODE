@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * This is the Mecanum class, a child class of Drivetrain. This class takes in inputs Vectors for driving, heading
+ * This is the BallDrive class, a child class of Drivetrain. This class takes in inputs Vectors for driving, heading
  * correction, and translational/centripetal correction and returns an array with wheel powers.
  * @author Baron Henderson - 20077 The Indubitables
  * @author Anyi Lin - 10158 Scott's Bots
@@ -24,10 +24,10 @@ import java.util.List;
  */
 public class Ball extends Drivetrain {
     public BallConstants constants;
-    private final DcMotorEx leftFront;
-    private final DcMotorEx leftRear;
-    private final DcMotorEx rightFront;
-    private final DcMotorEx rightRear;
+    private final DcMotorEx leftLong; //Forward and back
+    private final DcMotorEx leftLat; //Sideways movement
+    private final DcMotorEx rightLong;
+    private final DcMotorEx rightLat;
     private final List<DcMotorEx> motors;
     private final VoltageSensor voltageSensor;
     private double motorCachingThreshold;
@@ -51,12 +51,12 @@ public class Ball extends Drivetrain {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        leftFront = hardwareMap.get(DcMotorEx.class, ballConstants.leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, ballConstants.leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, ballConstants.rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, ballConstants.rightFrontMotorName);
+        leftLong = hardwareMap.get(DcMotorEx.class, ballConstants.leftFrontMotorName);
+        leftLat = hardwareMap.get(DcMotorEx.class, ballConstants.leftRearMotorName);
+        rightLat = hardwareMap.get(DcMotorEx.class, ballConstants.rightRearMotorName);
+        rightLong = hardwareMap.get(DcMotorEx.class, ballConstants.rightFrontMotorName);
 
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
+        motors = Arrays.asList(leftLong, leftLat, rightLong, rightLat);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -66,20 +66,13 @@ public class Ball extends Drivetrain {
 
         setMotorsToFloat();
         breakFollowing();
-
-        Vector copiedFrontLeftVector = ballConstants.frontLeftVector.normalize();
-        vectors = new Vector[]{
-                new Vector(copiedFrontLeftVector.getMagnitude(), copiedFrontLeftVector.getTheta()),
-                new Vector(copiedFrontLeftVector.getMagnitude(), 2 * Math.PI - copiedFrontLeftVector.getTheta()),
-                new Vector(copiedFrontLeftVector.getMagnitude(), 2 * Math.PI - copiedFrontLeftVector.getTheta()),
-                new Vector(copiedFrontLeftVector.getMagnitude(), copiedFrontLeftVector.getTheta())};
     }
 
     public void updateConstants() {
-        leftFront.setDirection(constants.leftFrontMotorDirection);
-        leftRear.setDirection(constants.leftRearMotorDirection);
-        rightFront.setDirection(constants.rightFrontMotorDirection);
-        rightRear.setDirection(constants.rightRearMotorDirection);
+        leftLong.setDirection(constants.leftLongMotorDirection);
+        leftLat.setDirection(constants.leftLatMotorDirection);
+        rightLong.setDirection(constants.rightLongMotorDirection);
+        rightLat.setDirection(constants.rightLatMotorDirection);
         this.motorCachingThreshold = constants.motorCachingThreshold;
         this.useBrakeModeInTeleOp = constants.useBrakeModeInTeleOp;
         this.voltageCompensation = constants.useVoltageCompensation;
@@ -160,21 +153,10 @@ public class Ball extends Drivetrain {
         truePathingVectors[0] = truePathingVectors[0].times(2.0);
         truePathingVectors[1] = truePathingVectors[1].times(2.0);
 
-        for (int i = 0; i < mecanumVectorsCopy.length; i++) {
-            // this copies the vectors from mecanumVectors but creates new references for them
-            mecanumVectorsCopy[i] = vectors[i].copy();
-
-            mecanumVectorsCopy[i].rotateVector(robotHeading);
-        }
-
-        /* CHANGE - All the code that actually turns these values into drivetrain powers
-        wheelPowers[0] = (mecanumVectorsCopy[1].getXComponent() * truePathingVectors[0].getYComponent() - truePathingVectors[0].getXComponent() * mecanumVectorsCopy[1].getYComponent()) / (mecanumVectorsCopy[1].getXComponent() * mecanumVectorsCopy[0].getYComponent() - mecanumVectorsCopy[0].getXComponent() * mecanumVectorsCopy[1].getYComponent());
-        wheelPowers[1] = (mecanumVectorsCopy[0].getXComponent() * truePathingVectors[0].getYComponent() - truePathingVectors[0].getXComponent() * mecanumVectorsCopy[0].getYComponent()) / (mecanumVectorsCopy[0].getXComponent() * mecanumVectorsCopy[1].getYComponent() - mecanumVectorsCopy[1].getXComponent() * mecanumVectorsCopy[0].getYComponent());
-        wheelPowers[2] = (mecanumVectorsCopy[3].getXComponent() * truePathingVectors[1].getYComponent() - truePathingVectors[1].getXComponent() * mecanumVectorsCopy[3].getYComponent()) / (mecanumVectorsCopy[3].getXComponent() * mecanumVectorsCopy[2].getYComponent() - mecanumVectorsCopy[2].getXComponent() * mecanumVectorsCopy[3].getYComponent());
-        wheelPowers[3] = (mecanumVectorsCopy[2].getXComponent() * truePathingVectors[1].getYComponent() - truePathingVectors[1].getXComponent() * mecanumVectorsCopy[2].getYComponent()) / (mecanumVectorsCopy[2].getXComponent() * mecanumVectorsCopy[3].getYComponent() - mecanumVectorsCopy[3].getXComponent() * mecanumVectorsCopy[2].getYComponent());*/
-
-
-
+        wheelPowers[0] = truePathingVectors[0].getYComponent(); // leftLong
+        wheelPowers[1] = truePathingVectors[0].getXComponent(); // leftLat
+        wheelPowers[2] = truePathingVectors[1].getYComponent(); // rightLong
+        wheelPowers[3] = truePathingVectors[1].getXComponent(); // rightLat
 
         if (voltageCompensation) {
             double voltageNormalized = getVoltageNormalized();
@@ -275,10 +257,10 @@ public class Ball extends Drivetrain {
 
     public String debugString() {
         return "Ball{" +
-                " leftFront=" + leftFront +
-                ", leftRear=" + leftRear +
-                ", rightFront=" + rightFront +
-                ", rightRear=" + rightRear +
+                " leftFront=" + leftLong +
+                ", leftRear=" + leftLat +
+                ", rightFront=" + rightLong +
+                ", rightRear=" + rightLat +
                 ", motors=" + motors +
                 ", motorCachingThreshold=" + motorCachingThreshold +
                 ", useBrakeModeInTeleOp=" + useBrakeModeInTeleOp +

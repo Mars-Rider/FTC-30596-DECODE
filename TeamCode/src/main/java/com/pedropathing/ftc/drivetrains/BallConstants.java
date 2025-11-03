@@ -13,22 +13,16 @@ public class BallConstants {
      *  Default Value: 65.43028 */
     public  double yVelocity = 65.43028;
 
-    private  double[] convertToPolar = Pose.cartesianToPolar(xVelocity, -yVelocity);
 
-    /** The actual drive vector for the front left wheel, if the robot is facing a heading of 0 radians with the wheel centered at (0,0)
-     *  Default Value: new Vector(convertToPolar[0], convertToPolar[1])
-     * @implNote This vector should not be changed, but only accessed.
-     */
-    public  Vector frontLeftVector = new Vector(convertToPolar[0], convertToPolar[1]).normalize();
     public  double maxPower = 1;
     public  String leftFrontMotorName = "leftFront";
     public  String leftRearMotorName = "leftRear";
     public  String rightFrontMotorName = "rightFront";
     public  String rightRearMotorName = "rightRear";
-    public  DcMotorSimple.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public  DcMotorSimple.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public  DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
-    public  DcMotorSimple.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public  DcMotorSimple.Direction leftLongMotorDirection = DcMotorSimple.Direction.REVERSE;
+    public  DcMotorSimple.Direction leftLatMotorDirection = DcMotorSimple.Direction.REVERSE;
+    public  DcMotorSimple.Direction rightLongMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public  DcMotorSimple.Direction rightLatMotorDirection = DcMotorSimple.Direction.FORWARD;
     public  double motorCachingThreshold = 0.01;
     public  boolean useBrakeModeInTeleOp = false;
     public  boolean useVoltageCompensation = false;
@@ -75,22 +69,22 @@ public class BallConstants {
     }
 
     public BallConstants leftFrontMotorDirection(DcMotorSimple.Direction leftFrontMotorDirection) {
-        this.leftFrontMotorDirection = leftFrontMotorDirection;
+        this.leftLongMotorDirection = leftFrontMotorDirection;
         return this;
     }
 
     public BallConstants leftRearMotorDirection(DcMotorSimple.Direction leftRearMotorDirection) {
-        this.leftRearMotorDirection = leftRearMotorDirection;
+        this.leftLatMotorDirection = leftRearMotorDirection;
         return this;
     }
 
     public BallConstants rightFrontMotorDirection(DcMotorSimple.Direction rightFrontMotorDirection) {
-        this.rightFrontMotorDirection = rightFrontMotorDirection;
+        this.rightLongMotorDirection = rightFrontMotorDirection;
         return this;
     }
 
     public BallConstants rightRearMotorDirection(DcMotorSimple.Direction rightRearMotorDirection) {
-        this.rightRearMotorDirection = rightRearMotorDirection;
+        this.rightLatMotorDirection = rightRearMotorDirection;
         return this;
     }
 
@@ -135,14 +129,6 @@ public class BallConstants {
         this.yVelocity = yVelocity;
     }
 
-    public Vector getFrontLeftVector() {
-        return frontLeftVector;
-    }
-
-    public void setFrontLeftVector(Vector frontLeftVector) {
-        this.frontLeftVector = frontLeftVector;
-    }
-
     public double getMaxPower() {
         return maxPower;
     }
@@ -183,36 +169,36 @@ public class BallConstants {
         this.rightRearMotorName = rightRearMotorName;
     }
 
-    public DcMotorSimple.Direction getLeftFrontMotorDirection() {
-        return leftFrontMotorDirection;
+    public DcMotorSimple.Direction getLeftLongMotorDirection() {
+        return leftLongMotorDirection;
     }
 
-    public void setLeftFrontMotorDirection(DcMotorSimple.Direction leftFrontMotorDirection) {
-        this.leftFrontMotorDirection = leftFrontMotorDirection;
+    public void setLeftLongMotorDirection(DcMotorSimple.Direction leftLongMotorDirection) {
+        this.leftLongMotorDirection = leftLongMotorDirection;
     }
 
-    public DcMotorSimple.Direction getLeftRearMotorDirection() {
-        return leftRearMotorDirection;
+    public DcMotorSimple.Direction getLeftLatMotorDirection() {
+        return leftLatMotorDirection;
     }
 
-    public void setLeftRearMotorDirection(DcMotorSimple.Direction leftRearMotorDirection) {
-        this.leftRearMotorDirection = leftRearMotorDirection;
+    public void setLeftLatMotorDirection(DcMotorSimple.Direction leftLatMotorDirection) {
+        this.leftLatMotorDirection = leftLatMotorDirection;
     }
 
-    public DcMotorSimple.Direction getRightFrontMotorDirection() {
-        return rightFrontMotorDirection;
+    public DcMotorSimple.Direction getRightLongMotorDirection() {
+        return rightLongMotorDirection;
     }
 
-    public void setRightFrontMotorDirection(DcMotorSimple.Direction rightFrontMotorDirection) {
-        this.rightFrontMotorDirection = rightFrontMotorDirection;
+    public void setRightLongMotorDirection(DcMotorSimple.Direction rightLongMotorDirection) {
+        this.rightLongMotorDirection = rightLongMotorDirection;
     }
 
-    public DcMotorSimple.Direction getRightRearMotorDirection() {
-        return rightRearMotorDirection;
+    public DcMotorSimple.Direction getRightLatMotorDirection() {
+        return rightLatMotorDirection;
     }
 
-    public void setRightRearMotorDirection(DcMotorSimple.Direction rightRearMotorDirection) {
-        this.rightRearMotorDirection = rightRearMotorDirection;
+    public void setRightLatMotorDirection(DcMotorSimple.Direction rightLatMotorDirection) {
+        this.rightLatMotorDirection = rightLatMotorDirection;
     }
 
     public double getMotorCachingThreshold() {
@@ -238,17 +224,17 @@ public class BallConstants {
     public void defaults() {
         xVelocity = 81.34056;
         yVelocity = 65.43028;
-        convertToPolar = Pose.cartesianToPolar(xVelocity, -yVelocity);
-        frontLeftVector = new Vector(convertToPolar[0], convertToPolar[1]).normalize();
+        //convertToPolar = Pose.cartesianToPolar(xVelocity, -yVelocity);
+        //frontLeftVector = new Vector(convertToPolar[0], convertToPolar[1]).normalize();
         maxPower = 1;
         leftFrontMotorName = "leftFront";
         leftRearMotorName = "leftRear";
         rightFrontMotorName = "rightFront";
         rightRearMotorName = "rightRear";
-        leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
-        leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
-        rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
-        rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+        leftLongMotorDirection = DcMotorSimple.Direction.REVERSE;
+        leftLatMotorDirection = DcMotorSimple.Direction.REVERSE;
+        rightLongMotorDirection = DcMotorSimple.Direction.FORWARD;
+        rightLatMotorDirection = DcMotorSimple.Direction.FORWARD;
         motorCachingThreshold = 0.01;
         useBrakeModeInTeleOp = false;
         useVoltageCompensation = false;

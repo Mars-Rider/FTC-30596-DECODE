@@ -7,6 +7,7 @@ import com.pedropathing.ftc.localization.RevHubIMU;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.sun.tools.javac.util.List;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
@@ -365,23 +367,17 @@ public class Robot {
         llResult = limelight.getLatestResult();
         Pose3D botPose = null;
         if(llResult != null && llResult.isValid()){
-            for (List<llResult.FiducialResult> fiducial:
-            llResult.getFiducialResults()) {
-
-                llResult.getFiducialResults();
-
-                limelight.net
-
+            for (LLResultTypes.FiducialResult fiducial:llResult.getFiducialResults()) {
+                if(fiducial.getFiducialId() == 20 && Globals.alliance == 1){
+                    botPose = fiducial.getTargetPoseRobotSpace();
+                }
             }
-
-            botPose = llResult.getBotpose(); //Get position in relation to april tag (i think 90 is straight on)
             telemetry.addData("Tx", llResult.getTx());
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
-
-
         }
-        double distance = Math.sqrt(x*x + y*y + z*z);
+        double distance = Math.sqrt(Math.pow(botPose.getPosition().x, 2) + Math.pow(botPose.getPosition().y, 2) + Math.pow((botPose.getPosition().z)-30, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
+
     } //Find distance and get needed power
 
     public void start(){
