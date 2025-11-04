@@ -116,6 +116,21 @@ public class Ball extends Drivetrain {
         // this contains the pathing vectors, one for each side (heading control requires 2)
         Vector[] truePathingVectors = new Vector[2];
 
+        double w = 10;
+        double l = 10;
+        double r = Math.sqrt((l*l)+(w*w));
+
+        headingPower.getYComponent();
+
+        Vector[] offsetVectors = new Vector[]{
+                new Vector(headingPower.getMagnitude()*(w/r), headingPower.getTheta()), //Left
+                new Vector(headingPower.getMagnitude()*(l/r), headingPower.getTheta()+Math.toRadians(90)), //X-axis
+                new Vector(1-(w/r), headingPower.getTheta()) // Right
+        }; //The vectors that makes robot rotate around cg
+
+
+        double x = correctivePower.getXComponent();
+        double y = correctivePower.getYComponent();
 
         //Corrections for stuff, don't really need to change
         if (correctivePower.getMagnitude() == maxPowerScaling) {
@@ -125,6 +140,8 @@ public class Ball extends Drivetrain {
         } else {
             // corrective power did not take up all the power, so add on heading power
             Vector leftSideVector = correctivePower.minus(headingPower);
+            leftSideVector = leftSideVector.minus(offsetVectors[0]);
+
             Vector rightSideVector = correctivePower.plus(headingPower);
 
             if (leftSideVector.getMagnitude() > maxPowerScaling || rightSideVector.getMagnitude() > maxPowerScaling) {
@@ -150,6 +167,8 @@ public class Ball extends Drivetrain {
             }
         }
 
+        //add to the true pathing vectors the rotation
+
         truePathingVectors[0] = truePathingVectors[0].times(2.0);
         truePathingVectors[1] = truePathingVectors[1].times(2.0);
 
@@ -157,6 +176,7 @@ public class Ball extends Drivetrain {
         wheelPowers[1] = truePathingVectors[0].getXComponent(); // leftLat
         wheelPowers[2] = truePathingVectors[1].getYComponent(); // rightLong
         wheelPowers[3] = truePathingVectors[1].getXComponent(); // rightLat
+
 
         if (voltageCompensation) {
             double voltageNormalized = getVoltageNormalized();

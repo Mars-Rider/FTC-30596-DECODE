@@ -5,6 +5,7 @@ import static android.os.SystemClock.sleep;
 import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.ftc.localization.RevHubIMU;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -56,6 +57,12 @@ public class Robot {
     private double rollSpeed = 0.75; //Speed of the rollers
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 0.5; //Speed of intake
+
+    //Swerve Stuff
+    public double rotationOffset = 0.1;
+    private double width = 10;//Inches appart
+    private double length = 10; //Inches Infront of CG
+    private double radius = Math.sqrt((width*width)+(length+length));
 
     private HuskyLens huskyLens;
     private Limelight3A limelight;
@@ -379,6 +386,34 @@ public class Robot {
         double distance = Math.sqrt(Math.pow(botPose.getPosition().x, 2) + Math.pow(botPose.getPosition().y, 2) + Math.pow((botPose.getPosition().z)-30, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
 
     } //Find distance and get needed power
+
+    public void SwerveDrive(double x, double y, double r){
+
+        r= r/(Math.abs(r)+Math.abs(rotationOffset));
+
+        double B = x + (r*(length/radius));
+        double C = y - (r*(width/radius));
+        double D = y + (r*(width/radius));
+        double m = Math.max(1, Math.max(Math.sqrt((B*B)+(C*C)),Math.sqrt((B*B)+(D*D))));
+
+        Vector[] movementVectors = new Vector[]{
+                new Vector(Math.sqrt((B*B)+(D*D))/m, Math.atan2(B,D)), //Left
+                new Vector(Math.sqrt((B*B)+(C*C))/m, Math.atan2(B,C)) // Right
+        };
+
+        // the powers for the wheel vectors
+        double[] wheelPowers = new double[4];
+
+        wheelPowers[0] = movementVectors[0].getYComponent();
+        wheelPowers[1] = movementVectors[0].getXComponent();
+        wheelPowers[2] = movementVectors[1].getYComponent();
+        wheelPowers[3] = movementVectors[1].getXComponent();
+
+        LFB.setPower(wheelPowers[0]);
+        LRL.setPower(wheelPowers[1]);
+        RFB.setPower(wheelPowers[2]);
+        RRL.setPower(wheelPowers[3]);
+    }
 
     public void start(){
         readFieldData();
