@@ -23,6 +23,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import org.firstinspires.ftc.teamcode.Globals;
+import org.firstinspires.ftc.teamcode.Swerve.Swerve;
 
 public class Robot {
     public HardwareMap map;
@@ -52,8 +53,8 @@ public class Robot {
     public double flySpeed = 0.5; //Speed of flywheel
     public double flySpeedIncre = 0.1; //Default increase/dececrease of the speed of flywheel
     public boolean incremented = false;
-    private Servo[] pRoll; //Purple Ball Rollers
-    private Servo[] gRoll; //Green Ball Rollers
+    private Servo[] pRoll = new Servo[2]; //Purple Ball Rollers
+    private Servo[] gRoll = new Servo[2]; //Green Ball Rollers
     private double rollSpeed = 0.75; //Speed of the rollers
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 0.5; //Speed of intake
@@ -90,7 +91,7 @@ public class Robot {
         gRoll[1] = hardwareMap.get(Servo.class, "gR2");//5 ES
 
         //Intake
-        //intake = hardwareMap.get(DcMotor.class, "intake");//3 E
+        intake = hardwareMap.get(DcMotor.class, "intake");//3 E
         sort = hardwareMap.get(Servo.class, "sort");//3 ES (Port 3, Expansion Hub Servo Slots)
         sort.setDirection(Servo.Direction.FORWARD);
 
@@ -98,25 +99,25 @@ public class Robot {
         LFB.setDirection(DcMotor.Direction.FORWARD);
         RRL.setDirection(DcMotor.Direction.REVERSE);
         RFB.setDirection(DcMotor.Direction.REVERSE);
-        //intake.setDirection(DcMotor.Direction.FORWARD);
-//        pFly.setDirection(DcMotor.Direction.FORWARD);
-//        gFly.setDirection(DcMotor.Direction.FORWARD);
+        intake.setDirection(DcMotor.Direction.FORWARD);
+        pFly.setDirection(DcMotor.Direction.FORWARD);
+        gFly.setDirection(DcMotor.Direction.FORWARD);
 
         RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        pFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        gFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        pFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        gFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         RRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-       //intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//        pFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//        gFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+       intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        pFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        gFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         //Huksy Lens
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
@@ -146,10 +147,12 @@ public class Robot {
             return primary;
         }
     }
+
+    boolean trigger = true; //false is held dwon
+
     public boolean triggerAsButton(double news){
         double analogThreshold = 0.25;
-
-        return Math.abs(news) > analogThreshold;
+        return trigger && Math.abs(news) > analogThreshold;
     }
 
     /*public void driveWithControllers(double forward, double strafe, double turn, boolean scale) {
@@ -244,10 +247,10 @@ public class Robot {
     //Intake
     public void intakePower() {
         if(!intakeOn){
-            //intake.setPower(intakeSpeed);
+            intake.setPower(intakeSpeed);
             intakeOn = true;
         } else {
-            //intake.setPower(0);
+            intake.setPower(0);
             intakeOn = false;
         }
     } //Turn on and off power of intake
@@ -255,10 +258,10 @@ public class Robot {
     public void intakePower(boolean manual) { //True is on, false is off
         if(intakeOn != manual){ //Only go forward if manual isn't the same as fly
             if(manual){//True is on
-                //intake.setPower(intakeSpeed);
+                intake.setPower(intakeSpeed);
                 intakeOn = true;
             } else {
-                //intake.setPower(0);
+                intake.setPower(0);
                 intakeOn = false;
             }
         }
@@ -397,17 +400,20 @@ public class Robot {
         double m = Math.max(1, Math.max(Math.sqrt((B*B)+(C*C)),Math.sqrt((B*B)+(D*D))));
 
         Vector[] movementVectors = new Vector[]{
-                new Vector(Math.sqrt((B*B)+(D*D))/m, Math.atan2(B,D)), //Left
+                new Vector(Math.sqrt((B*B)+(D*D))/m, Math.atan2(B,D)), //Left (Swap B and D as first is the y and second is x, and I think that B is using a x compontent) (B,D) bassically = (X,Y), but the function is meant for (y,x)
                 new Vector(Math.sqrt((B*B)+(C*C))/m, Math.atan2(B,C)) // Right
         };
 
         // the powers for the wheel vectors
         double[] wheelPowers = new double[4];
 
+        movementVectors = Swerve.swerve(x,y,r);
+
         wheelPowers[0] = movementVectors[0].getYComponent();
         wheelPowers[1] = movementVectors[0].getXComponent();
         wheelPowers[2] = movementVectors[1].getYComponent();
         wheelPowers[3] = movementVectors[1].getXComponent();
+
 
         LFB.setPower(wheelPowers[0]);
         LRL.setPower(wheelPowers[1]);

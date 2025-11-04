@@ -25,8 +25,6 @@ public class Scrimage extends LinearOpMode{
         waitForStart();
         //On Start
 
-
-
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
@@ -35,10 +33,13 @@ public class Scrimage extends LinearOpMode{
 
             robot.SwerveDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-            //if(gamepad1.dpad_up){if(robot.facingGoal!=true){robot.facingGoal = true;}else{robot.facingGoal = false;}}
+            if(gamepad1.xWasPressed()){robot.outtake(1);}
+            if(gamepad1.bWasPressed()){robot.outtake(2);}
 
+            if(gamepad1.aWasPressed()){robot.flyPower();}
+            if(gamepad1.yWasPressed()){robot.intakePower();}
 
-            if (gamepad1.right_bumper && !robot.incremented){
+            if (gamepad1.rightBumperWasPressed() && !robot.incremented){
                 robot.flySpeed += robot.flySpeedIncre;
                 robot.incremented = true;
             } else if (robot.triggerAsButton(gamepad1.right_trigger) && !robot.incremented){

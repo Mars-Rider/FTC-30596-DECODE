@@ -14,6 +14,10 @@ public class BallConstants {
     public  double yVelocity = 65.43028;
 
 
+    public double xModule = 10; //Modules Horizontal distance from the Center of rotation
+    public double yModule = 10; //Modules vertical (forward) distance from the Center of rotation in inches i think
+
+
     public  double maxPower = 1;
     public  String leftFrontMotorName = "leftFront";
     public  String leftRearMotorName = "leftRear";
