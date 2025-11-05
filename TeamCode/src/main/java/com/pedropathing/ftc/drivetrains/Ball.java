@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.Swerve.Swerve;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -99,8 +101,6 @@ public class Ball extends Drivetrain {
      * @return this returns an Array of doubles with a length of 4, which contains the wheel powers.
      */
     public double[] calculateDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
-        headingPower.rotateVector(Math.atan2(constants.yModule,constants.xModule)); //The offset needed for the pathing powers to work with ball drive
-
         // clamps down the magnitudes of the input vectors
         if (correctivePower.getMagnitude() > maxPowerScaling)
             correctivePower.setMagnitude(maxPowerScaling);
@@ -111,45 +111,18 @@ public class Ball extends Drivetrain {
 
         // the powers for the wheel vectors
         double[] wheelPowers = new double[4];
+        
+        Vector translationVector = correctivePower.plus(pathingPower);
 
-        // this contains the pathing vectors, one for each side (heading control requires 2)
-        Vector[] truePathingVectors = new Vector[2];
-
-        //Corrections for stuff, don't really need to change
-        if (correctivePower.getMagnitude() == maxPowerScaling) {
-            // checks for corrective power equal to max power scaling in magnitude. if equal, then set pathing power to that
-            truePathingVectors[0] = correctivePower.copy();
-            truePathingVectors[1] = correctivePower.copy();
-        } else {
-            // corrective power did not take up all the power, so add on heading power
-            Vector leftSideVector = correctivePower.minus(headingPower);
-            Vector rightSideVector = correctivePower.plus(headingPower);
-
-            if (leftSideVector.getMagnitude() > maxPowerScaling || rightSideVector.getMagnitude() > maxPowerScaling) {
-                //if the combined corrective and heading power is greater than 1, then scale down heading power
-                double headingScalingFactor = Math.min(findNormalizingScaling(correctivePower, headingPower, maxPowerScaling), findNormalizingScaling(correctivePower, headingPower.times(-1), maxPowerScaling));
-                truePathingVectors[0] = correctivePower.minus(headingPower.times(headingScalingFactor));
-                truePathingVectors[1] = correctivePower.plus(headingPower.times(headingScalingFactor));
-            } else {
-                // if we're here then we can add on some drive power but scaled down to 1
-                Vector leftSideVectorWithPathing = leftSideVector.plus(pathingPower);
-                Vector rightSideVectorWithPathing = rightSideVector.plus(pathingPower);
-
-                if (leftSideVectorWithPathing.getMagnitude() > maxPowerScaling || rightSideVectorWithPathing.getMagnitude() > maxPowerScaling) {
-                    // too much power now, so we scale down the pathing vector
-                    double pathingScalingFactor = Math.min(findNormalizingScaling(leftSideVector, pathingPower, maxPowerScaling), findNormalizingScaling(rightSideVector, pathingPower, maxPowerScaling));
-                    truePathingVectors[0] = leftSideVector.plus(pathingPower.times(pathingScalingFactor));
-                    truePathingVectors[1] = rightSideVector.plus(pathingPower.times(pathingScalingFactor));
-                } else {
-                    // just add the vectors together and you get the final vector
-                    truePathingVectors[0] = leftSideVectorWithPathing.copy();
-                    truePathingVectors[1] = rightSideVectorWithPathing.copy();
-                }
-            }
+        // Clamp magnitude
+        if (translationVector.getMagnitude() > maxPowerScaling) {
+            translationVector.setMagnitude(maxPowerScaling);
+        }
+        if (headingPower.getMagnitude() > maxPowerScaling) {
+            headingPower.setMagnitude(maxPowerScaling);
         }
 
-        truePathingVectors[0] = truePathingVectors[0].times(2.0);
-        truePathingVectors[1] = truePathingVectors[1].times(2.0);
+        Vector[] truePathingVectors = Swerve.swerve(translationVector.getXComponent(), translationVector.getYComponent(), headingPower.getMagnitude());
 
         wheelPowers[0] = truePathingVectors[0].getYComponent(); // leftLong
         wheelPowers[1] = truePathingVectors[0].getXComponent(); // leftLat
