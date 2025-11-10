@@ -53,6 +53,16 @@ public class Robot {
     public double flySpeed = 0.5; //Speed of flywheel
     public double flySpeedIncre = 0.1; //Default increase/dececrease of the speed of flywheel
     public boolean incremented = false;
+
+    private double flyXOffset = 0;
+    private double flyYOffset = 0;
+    private double targetXOffset = 6;
+    private double targetYOffset = 6;
+    private double flyEfficency = 0.75;
+    private double flyAngle = 60;
+    private double maxRPM = 6000;
+    private double flywheelDiameter = 2.5;
+
     private Servo[] pRoll = new Servo[2]; //Purple Ball Rollers
     private Servo[] gRoll = new Servo[2]; //Green Ball Rollers
     private double rollSpeed = 0.75; //Speed of the rollers
@@ -71,7 +81,7 @@ public class Robot {
     private IMU imu;
 
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
-        this.telemetry = telemetry;
+        this.telemetry = gtelemetry;
         this.map = hardwareMap;
 
         //Drivetrain
@@ -386,9 +396,17 @@ public class Robot {
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
         }
-        double distance = Math.sqrt(Math.pow(botPose.getPosition().x, 2) + Math.pow(botPose.getPosition().y, 2) + Math.pow((botPose.getPosition().z)-30, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
+        double distance = Math.sqrt(Math.pow(botPose.getPosition().x+targetXOffset, 2) + Math.pow(botPose.getPosition().y+targetXOffset, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
 
+        double g = 386.09;
+        double velocity = Math.sqrt((g*Math.pow(distance-flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(flyAngle)),2)*(((distance-flyXOffset)*Math.tan(Math.toRadians(flyAngle)))-(distance-flyYOffset))));
+        double rpm = (60*velocity)/(flywheelDiameter*Math.toRadians(180));
+        double power = rpm/(maxRPM*flyEfficency);
+
+        flySpeed = power;
     } //Find distance and get needed power
+
+    //Face goal PID (HELL)
 
     public void SwerveDrive(double x, double y, double r){
 
