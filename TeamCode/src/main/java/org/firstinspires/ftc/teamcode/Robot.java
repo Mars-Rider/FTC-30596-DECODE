@@ -81,7 +81,7 @@ public class Robot {
     private IMU imu;
 
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
-        this.telemetry = gtelemetry;
+        this.telemetry = telemetry;
         this.map = hardwareMap;
 
         //Drivetrain
@@ -208,7 +208,7 @@ public class Robot {
     } //Turn on and off power of flywheel
 
     public void flyPower(boolean manual) { //True is on, false is off
-        if(fly != manual){ //Only go forward if manual isn't the same as fly
+        //if(fly != manual){ //Only go forward if manual isn't the same as fly
             if(manual){//True is on
                 pFly.setPower(flySpeed);
                 gFly.setPower(flySpeed);
@@ -218,7 +218,7 @@ public class Robot {
                 gFly.setPower(0);
                 fly = false;
             }
-        }
+        //}
     } //Turn on and off power of flywheel based off of what the input is
 
     public void outtake(int color) {

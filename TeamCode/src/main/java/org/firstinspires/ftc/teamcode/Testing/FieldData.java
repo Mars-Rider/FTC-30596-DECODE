@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.Globals;
 import org.firstinspires.ftc.teamcode.Robot;
 
+import java.util.Arrays;
+
 @TeleOp
 public class FieldData extends LinearOpMode{
 
@@ -19,12 +21,13 @@ public class FieldData extends LinearOpMode{
         waitForStart();
         //On Start
         robot.readFieldData();
-        telemetry.addLine("Code: " + Globals.code);
+        telemetry.addLine("Code: " + Arrays.toString(Globals.code));
         telemetry.addLine("alliance: " + Globals.alliance);
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            telemetry.update();
         }
     }
 }
