@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import static android.os.SystemClock.sleep;
 
 import com.pedropathing.ftc.FTCCoordinates;
-import com.pedropathing.ftc.localization.RevHubIMU;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
@@ -11,18 +10,17 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.sun.tools.javac.util.List;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-import org.firstinspires.ftc.teamcode.Globals;
 import org.firstinspires.ftc.teamcode.Swerve.Swerve;
 
 public class Robot {
@@ -30,7 +28,7 @@ public class Robot {
     public final Telemetry telemetry;
 
     public DcMotor LRL, LFB, RRL, RFB;
-    public DcMotor pFly, gFly, intake;
+    public DcMotor bFly, tFly, intake;
     public Servo sort;
 
     public boolean opMode = false; //True is auton
@@ -63,8 +61,8 @@ public class Robot {
     private double maxRPM = 6000;
     private double flywheelDiameter = 2.5;
 
-    private Servo[] pRoll = new Servo[2]; //Purple Ball Rollers
-    private Servo[] gRoll = new Servo[2]; //Green Ball Rollers
+    private CRServo[] pRoll = new CRServo[2]; //Purple Ball Rollers
+    private CRServo[] gRoll = new CRServo[2]; //Green Ball Rollers
     private double rollSpeed = 0.75; //Speed of the rollers
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 0.5; //Speed of intake
@@ -91,14 +89,14 @@ public class Robot {
         RFB = hardwareMap.get(DcMotor.class, "RFB");//1 C
 
         //Flywheels
-        pFly = hardwareMap.get(DcMotor.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
-        gFly = hardwareMap.get(DcMotor.class, "gFly");//1 E
+        bFly = hardwareMap.get(DcMotor.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
+        tFly = hardwareMap.get(DcMotor.class, "gFly");//1 E
 
         //Rollers
-        pRoll[0] = hardwareMap.get(Servo.class, "pR1");//1 ES
-        pRoll[1] = hardwareMap.get(Servo.class, "pR2");//2 ES
-        gRoll[0] = hardwareMap.get(Servo.class, "gR1");//4 ES
-        gRoll[1] = hardwareMap.get(Servo.class, "gR2");//5 ES
+        pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES
+        pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
+        gRoll[0] = hardwareMap.get(CRServo.class, "gR1");//4 ES
+        gRoll[1] = hardwareMap.get(CRServo.class, "gR2");//5 ES
 
         //Intake
         intake = hardwareMap.get(DcMotor.class, "intake");//3 E
@@ -109,25 +107,33 @@ public class Robot {
         LFB.setDirection(DcMotor.Direction.FORWARD);
         RRL.setDirection(DcMotor.Direction.REVERSE);
         RFB.setDirection(DcMotor.Direction.REVERSE);
-        intake.setDirection(DcMotor.Direction.FORWARD);
-        pFly.setDirection(DcMotor.Direction.FORWARD);
-        gFly.setDirection(DcMotor.Direction.FORWARD);
+        intake.setDirection(DcMotor.Direction.REVERSE);
+        bFly.setDirection(DcMotor.Direction.REVERSE);
+        tFly.setDirection(DcMotor.Direction.REVERSE);
+        for (CRServo servo:
+             pRoll) {
+            servo.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+        for (CRServo servo:
+                gRoll) {
+            servo.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
 
         RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        pFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        gFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        bFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        tFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         RRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        pFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        gFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        bFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        tFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         //Huksy Lens
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
@@ -197,12 +203,12 @@ public class Robot {
 //    //Flywheels
     public void flyPower() {
         if(!fly){
-            pFly.setPower(flySpeed);
-            gFly.setPower(flySpeed);
+            bFly.setPower(flySpeed);
+            tFly.setPower(flySpeed);
             fly = true;
         } else {
-            pFly.setPower(0);
-            gFly.setPower(0);
+            bFly.setPower(0);
+            tFly.setPower(0);
             fly = false;
         }
     } //Turn on and off power of flywheel
@@ -210,30 +216,34 @@ public class Robot {
     public void flyPower(boolean manual) { //True is on, false is off
         //if(fly != manual){ //Only go forward if manual isn't the same as fly
             if(manual){//True is on
-                pFly.setPower(flySpeed);
-                gFly.setPower(flySpeed);
+                bFly.setPower(flySpeed);
+                tFly.setPower(flySpeed);
                 fly = true;
             } else {
-                pFly.setPower(0);
-                gFly.setPower(0);
+                bFly.setPower(0);
+                tFly.setPower(0);
                 fly = false;
             }
         //}
     } //Turn on and off power of flywheel based off of what the input is
 
     public void outtake(int color) {
-        if(!fly){
-            flyPower(true);
             if(color == 1) { //Purple
-                for (Servo servo : pRoll) {
-                    servo.setPosition(rollSpeed);
+                for (CRServo servo : pRoll) {
+                    servo.setPower(rollSpeed);
                 }
             } else if (color == 2) { // Green
-                for (Servo servo : gRoll) {
-                    servo.setPosition(rollSpeed);
+                for (CRServo servo : gRoll) {
+                    servo.setPower(rollSpeed);
+                }
+            } else if (color == 0) { // Turn off
+                for (CRServo servo : pRoll) {
+                    servo.setPower(0);
+                }
+                for (CRServo servo : gRoll) {
+                    servo.setPower(0);
                 }
             }
-        }
     } //Turn on power if needed and spin rollers based on the color
 
     public void outtakeByCode() {
@@ -436,6 +446,26 @@ public class Robot {
         LFB.setPower(wheelPowers[0]);
         LRL.setPower(wheelPowers[1]);
         RFB.setPower(wheelPowers[2]);
+        RRL.setPower(wheelPowers[3]);
+    }
+
+    public void drive(double x, double y, double r){
+        double[] wheelPowers = {0,0,0,0}; //Fr, fl, br, bl
+
+        wheelPowers[0] = y-x-r;
+        wheelPowers[1] = y+x+r;
+        wheelPowers[2] = y-x+r;
+        wheelPowers[3] = y+x-r;
+
+        double m = Math.max(1,Math.max(Math.abs(wheelPowers[0]),Math.max(Math.abs(wheelPowers[1]),Math.max(Math.abs(wheelPowers[2]),Math.abs(wheelPowers[3])))));
+        wheelPowers[0] /= m;
+        wheelPowers[1] /= m;
+        wheelPowers[2] /= m;
+        wheelPowers[3] /= m;
+
+        LFB.setPower(wheelPowers[1]);
+        LRL.setPower(wheelPowers[2]);
+        RFB.setPower(wheelPowers[0]);
         RRL.setPower(wheelPowers[3]);
     }
 

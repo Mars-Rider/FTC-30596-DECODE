@@ -1,18 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
-import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
-import com.pedropathing.follower.Follower;
-
-import java.util.function.Supplier;
 
 @TeleOp
 public class Scrimage extends LinearOpMode{
@@ -24,6 +13,9 @@ public class Scrimage extends LinearOpMode{
 
         waitForStart();
         //On Start
+        if (Globals.code[0] != 0) {
+            //robot.readFieldData();
+        }
 
         if (isStopRequested()) return;
 
@@ -31,19 +23,25 @@ public class Scrimage extends LinearOpMode{
             robot.update();
             telemetry.update();
 
-            robot.SwerveDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            robot.drive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
             if(gamepad1.xWasPressed()){robot.outtake(1);}
             if(gamepad1.bWasPressed()){robot.outtake(2);}
 
-            if(gamepad1.aWasPressed()){robot.flyPower();}
-            if(gamepad1.yWasPressed()){robot.intakePower();}
+            if(gamepad1.xWasReleased()){robot.outtake(0);}
+            if(gamepad1.bWasReleased()){robot.outtake(0);}
+
+            if(gamepad1.aWasPressed()){robot.tFly.setPower(1);}
+            if(gamepad1.yWasPressed()){robot.intake.setPower(1);}
+
+            if(gamepad1.aWasReleased()){robot.tFly.setPower(0);}
+            if(gamepad1.yWasReleased()){robot.intake.setPower(0);}
 
             if (gamepad1.rightBumperWasPressed() && !robot.incremented){
                 robot.flySpeed += robot.flySpeedIncre;
                 robot.incremented = true;
             } else if (robot.triggerAsButton(gamepad1.right_trigger) && !robot.incremented){
-                robot.flySpeed += robot.flySpeedIncre;
+                robot.flySpeed -= robot.flySpeedIncre;
                 robot.incremented = true;
             }
         }
