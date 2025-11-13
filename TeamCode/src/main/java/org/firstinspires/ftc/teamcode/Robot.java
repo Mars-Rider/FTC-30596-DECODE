@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import static android.os.SystemClock.sleep;
 
+import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PIDFController;
 import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
@@ -77,6 +79,10 @@ public class Robot {
     private Limelight3A limelight;
     LLResult llResult;
     private IMU imu;
+
+    //Goal PID
+    private PIDFCoefficients goalPIDCoefficients = new PIDFCoefficients(0.3,0,0,0);
+    private PIDFController goalPID = new PIDFController(goalPIDCoefficients);
 
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -425,7 +431,12 @@ public class Robot {
             );
         }
     } //Sets the code
-    public void faceGoal() {}//Track april tag
+
+
+    public double faceGoalPower() {
+        //Pedro
+        return 0;
+    }//Track april tag
     public void estimatePower() {
         //Get data
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();

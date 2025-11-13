@@ -37,7 +37,9 @@ public class Scrimage extends LinearOpMode{
             //if(gamepad1.aWasReleased()){robot.tFly.setPower(0);}
             //if(gamepad1.yWasReleased()){robot.intake.setPower(0);}
 
-
+            if(gamepad1.dpad_up){
+                robot.drive(0,0,robot.faceGoalPower());
+            }
 
             if (gamepad1.rightBumperWasPressed()){
                 robot.flySpeed += robot.flySpeedIncre;
