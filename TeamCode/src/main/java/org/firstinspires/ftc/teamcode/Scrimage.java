@@ -31,19 +31,23 @@ public class Scrimage extends LinearOpMode{
             if(gamepad1.xWasReleased()){robot.outtake(0);}
             if(gamepad1.bWasReleased()){robot.outtake(0);}
 
-            if(gamepad1.aWasPressed()){robot.tFly.setPower(1);}
-            if(gamepad1.yWasPressed()){robot.intake.setPower(1);}
+            if(gamepad1.aWasPressed()){robot.flyPower();}
+            if(gamepad1.yWasPressed()){robot.intakePower();}
 
-            if(gamepad1.aWasReleased()){robot.tFly.setPower(0);}
-            if(gamepad1.yWasReleased()){robot.intake.setPower(0);}
+            //if(gamepad1.aWasReleased()){robot.tFly.setPower(0);}
+            //if(gamepad1.yWasReleased()){robot.intake.setPower(0);}
 
-            if (gamepad1.rightBumperWasPressed() && !robot.incremented){
+
+
+            if (gamepad1.rightBumperWasPressed()){
                 robot.flySpeed += robot.flySpeedIncre;
-                robot.incremented = true;
-            } else if (robot.triggerAsButton(gamepad1.right_trigger) && !robot.incremented){
+                robot.adjustFlySpeed();
+            } else if (robot.triggerAsButtonPress(gamepad1.right_trigger) && !robot.incremented){
                 robot.flySpeed -= robot.flySpeedIncre;
-                robot.incremented = true;
+                robot.adjustFlySpeed();
             }
+
+            telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
         }
     }
 }

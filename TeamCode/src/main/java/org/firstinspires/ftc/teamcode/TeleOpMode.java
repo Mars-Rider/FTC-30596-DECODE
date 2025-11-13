@@ -78,10 +78,14 @@ public class TeleOpMode extends LinearOpMode{
             if(gamepad1.dpad_up){if(robot.facingGoal!=true){robot.facingGoal = true;}else{robot.facingGoal = false;}}
 
             if (gamepad1.right_bumper && !robot.incremented){
+                if(robot.flySpeed > 0.05){
                 robot.flySpeed += robot.flySpeedIncre;
+                }
                 robot.incremented = true;
             } else if (robot.triggerAsButton(gamepad1.right_trigger) && !robot.incremented){
+                if(robot.flySpeed <= 1){
                 robot.flySpeed += robot.flySpeedIncre;
+                }
                 robot.incremented = true;
             }
         }

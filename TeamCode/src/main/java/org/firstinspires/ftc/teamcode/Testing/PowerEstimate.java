@@ -21,7 +21,7 @@ public class PowerEstimate extends LinearOpMode{
         while (opModeIsActive()) {
             robot.estimatePower();
             //robot.flyPower(true);
-            robot.tFly.setPower(robot.flySpeed);
+            robot.flyPower(true);
             telemetry.addLine("Power: " + robot.flySpeed);
             telemetry.update();
         }

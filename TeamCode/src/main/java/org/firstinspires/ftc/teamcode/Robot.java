@@ -48,16 +48,16 @@ public class Robot {
 
     private boolean fly = false; //True = on
     private double dFlySpeed = 0.5; //Default speed of flywheel
-    public double flySpeed = 0.5; //Speed of flywheel
-    public double flySpeedIncre = 0.1; //Default increase/dececrease of the speed of flywheel
+    public double flySpeed = 0.45; //Speed of flywheel
+    public double flySpeedIncre = 0.05; //Default increase/dececrease of the speed of flywheel
     public boolean incremented = false;
 
     private double flyXOffset = 0;
     private double flyYOffset = 0;
     private double targetXOffset = 6;
     private double targetYOffset = 6;
-    private double flyEfficency = 0.75;
-    private double flyAngle = 60;
+    private double flyEfficency = 0.5;
+    private double flyAngle = 62.5;
     private double maxRPM = 6000;
     private double flywheelDiameter = 2.5;
 
@@ -95,8 +95,8 @@ public class Robot {
         //Rollers
         pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES
         pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
-        gRoll[0] = hardwareMap.get(CRServo.class, "gR1");//4 ES
-        gRoll[1] = hardwareMap.get(CRServo.class, "gR2");//5 ES
+        gRoll[0] = hardwareMap.get(CRServo.class, "gR1");//5 C
+        gRoll[1] = hardwareMap.get(CRServo.class, "gR2");//0 C
 
         //Intake
         intake = hardwareMap.get(DcMotor.class, "intake");//3 E
@@ -108,7 +108,7 @@ public class Robot {
         RRL.setDirection(DcMotor.Direction.REVERSE);
         RFB.setDirection(DcMotor.Direction.REVERSE);
         intake.setDirection(DcMotor.Direction.REVERSE);
-        bFly.setDirection(DcMotor.Direction.REVERSE);
+        bFly.setDirection(DcMotor.Direction.FORWARD);
         tFly.setDirection(DcMotor.Direction.REVERSE);
         for (CRServo servo:
              pRoll) {
@@ -168,7 +168,19 @@ public class Robot {
 
     public boolean triggerAsButton(double news){
         double analogThreshold = 0.25;
-        return trigger && Math.abs(news) > analogThreshold;
+        return Math.abs(news) > analogThreshold;
+    }
+
+    public boolean triggerAsButtonPress(double news){
+        double analogThreshold = 0.25;
+        if(trigger == true && Math.abs(news) > analogThreshold){
+            trigger = false;
+            return true;
+        } else if (Math.abs(news) < analogThreshold){
+            trigger = true;
+            return false;
+        }
+        return false;
     }
 
     /*public void driveWithControllers(double forward, double strafe, double turn, boolean scale) {
@@ -212,6 +224,13 @@ public class Robot {
             fly = false;
         }
     } //Turn on and off power of flywheel
+
+    public void adjustFlySpeed(){
+        if(fly){
+            bFly.setPower(flySpeed);
+            tFly.setPower(flySpeed);
+        }
+    }
 
     public void flyPower(boolean manual) { //True is on, false is off
         //if(fly != manual){ //Only go forward if manual isn't the same as fly
@@ -362,8 +381,25 @@ public class Robot {
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
 
-            codeID = llResult.getFiducialResults().get(0).getFiducialId();
-            allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
+            for (int i = 0; i < llResult.getFiducialResults().size(); i++) {
+                for (int h = 0; i < codeIDs.length; h++) {
+                    if (codeIDs[h] == codeID) {
+                        codeID = i;
+                        if (Globals.code[0] == 0){
+                            Globals.code = codes[codeID];
+                        }
+                        break;// return index when found
+                    } else {
+                        if(Globals.alliance == 0){
+                            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
+                        }
+                    }
+                }
+            }
+
+            //codeID = llResult.getFiducialResults().get(0).getFiducialId();
+
+            //allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
         }
 
         for (int i = 0; i < codeIDs.length; i++) {
@@ -373,13 +409,13 @@ public class Robot {
             }
         }
 
-        if (Globals.code[0] == 0){
-            Globals.code = codes[codeID];
-        }
-
-        if(Globals.alliance == 0){
-            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
-        }
+//        if (Globals.code[0] == 0){
+//            Globals.code = codes[codeID];
+//        }
+//
+//        if(Globals.alliance == 0){
+//            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
+//        }
 
         if(opMode && botPose != null){
             Globals.startPose = new Pose(
@@ -398,22 +434,25 @@ public class Robot {
         Pose3D botPose = null;
         if(llResult != null && llResult.isValid()){
             for (LLResultTypes.FiducialResult fiducial:llResult.getFiducialResults()) {
-                if(fiducial.getFiducialId() == 20 && Globals.alliance == 1){
-                    botPose = fiducial.getTargetPoseRobotSpace();
+                if (fiducial.getFiducialId() == 20 && Globals.alliance == 1) {
+                    //botPose = fiducial.getTargetPoseRobotSpace();
                 }
             }
+
+            botPose = llResult.getBotpose();
             telemetry.addData("Tx", llResult.getTx());
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
+
+            double distance = Math.sqrt(Math.pow(botPose.getPosition().x+targetXOffset, 2) + Math.pow(botPose.getPosition().y+targetXOffset, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
+
+            double g = 386.09;
+            double velocity = Math.sqrt((g*Math.pow(distance-flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(flyAngle)),2)*(((distance-flyXOffset)*Math.tan(Math.toRadians(flyAngle)))-(distance-flyYOffset))));
+            double rpm = (60*velocity)/(flywheelDiameter*Math.toRadians(180));
+            double power = rpm/(maxRPM*flyEfficency);
+
+            flySpeed = Math.abs(power);
         }
-        double distance = Math.sqrt(Math.pow(botPose.getPosition().x+targetXOffset, 2) + Math.pow(botPose.getPosition().y+targetXOffset, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
-
-        double g = 386.09;
-        double velocity = Math.sqrt((g*Math.pow(distance-flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(flyAngle)),2)*(((distance-flyXOffset)*Math.tan(Math.toRadians(flyAngle)))-(distance-flyYOffset))));
-        double rpm = (60*velocity)/(flywheelDiameter*Math.toRadians(180));
-        double power = rpm/(maxRPM*flyEfficency);
-
-        flySpeed = power;
     } //Find distance and get needed power
 
     //Face goal PID (HELL)
