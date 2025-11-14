@@ -13,7 +13,7 @@ public class Scrimage extends LinearOpMode{
 
         waitForStart();
         //On Start
-        if (Globals.code[0] != 0) {
+        if (Globals.code[0] == 0) {
             //robot.readFieldData();
         }
 
@@ -37,8 +37,30 @@ public class Scrimage extends LinearOpMode{
             //if(gamepad1.aWasReleased()){robot.tFly.setPower(0);}
             //if(gamepad1.yWasReleased()){robot.intake.setPower(0);}
 
+            if(gamepad1.dpad_left){
+                robot.sort(2);
+            } else if (gamepad1.dpad_right){
+                robot.sort(1);
+            } else if(gamepad1.dpadDownWasPressed()){
+                if(robot.sortOn){
+                    robot.sortOn = false;
+                } else {
+                    robot.sortOn = true;
+                }
+            } else {
+                if(robot.sortOn){
+                    robot.sort();
+                } else {
+                    robot.sort(0);
+                }
+            }
+
             if(gamepad1.dpad_up){
-                robot.drive(0,0,robot.faceGoalPower());
+                robot.estimatePower();
+            }
+
+            if (gamepad1.dpad_down){
+                //robot.outtakeByCode();
             }
 
             if (gamepad1.rightBumperWasPressed()){
@@ -50,6 +72,7 @@ public class Scrimage extends LinearOpMode{
             }
 
             telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
+            telemetry.addLine("Sort On: "+ robot.sortOn);
         }
     }
 }

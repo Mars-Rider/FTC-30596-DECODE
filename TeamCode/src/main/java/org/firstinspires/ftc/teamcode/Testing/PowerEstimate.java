@@ -20,6 +20,13 @@ public class PowerEstimate extends LinearOpMode{
 
         while (opModeIsActive()) {
             robot.estimatePower();
+
+            if(gamepad1.xWasPressed()){robot.outtake(1);}
+            if(gamepad1.bWasPressed()){robot.outtake(2);}
+
+            if(gamepad1.xWasReleased()){robot.outtake(0);}
+            if(gamepad1.bWasReleased()){robot.outtake(0);}
+
             //robot.flyPower(true);
             robot.flyPower(true);
             telemetry.addLine("Power: " + robot.flySpeed);

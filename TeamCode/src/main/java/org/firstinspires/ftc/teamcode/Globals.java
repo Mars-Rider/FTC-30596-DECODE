@@ -10,7 +10,7 @@ public class Globals {
 
     static public int[] code = {0,0,0}; //0 = No ball, 1 = Purple, 2 = Green
 
-    static public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
+    static public int[] loaded = {1, 1, 2}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     static public Pose startPose;
 }

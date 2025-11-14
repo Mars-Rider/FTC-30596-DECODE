@@ -36,7 +36,8 @@ public class Robot {
     public boolean opMode = false; //True is auton
 
     private double sortMid = 0.5;
-    private double sortInc = 0.2;
+    private double sortInc = 0.25;
+    public boolean sortOn = true;//True is sorting
 
     public double driveSpeed = 0.5; //Default speed of drivetrain
     public double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
@@ -54,12 +55,12 @@ public class Robot {
     public double flySpeedIncre = 0.05; //Default increase/dececrease of the speed of flywheel
     public boolean incremented = false;
 
-    private double flyXOffset = 0;
-    private double flyYOffset = 0;
+    private double flyXOffset = 4;
+    private double flyYOffset = 12;
     private double targetXOffset = 6;
     private double targetYOffset = 6;
     private double flyEfficency = 0.5;
-    private double flyAngle = 62.5;
+    private double flyAngle = 55;
     private double maxRPM = 6000;
     private double flywheelDiameter = 2.5;
 
@@ -67,7 +68,7 @@ public class Robot {
     private CRServo[] gRoll = new CRServo[2]; //Green Ball Rollers
     private double rollSpeed = 0.75; //Speed of the rollers
     private boolean intakeOn = false; //True = on
-    private double intakeSpeed = 0.5; //Speed of intake
+    private double intakeSpeed = 1; //Speed of intake
 
     //Swerve Stuff
     public double rotationOffset = 0.1;
@@ -109,13 +110,13 @@ public class Robot {
         sort = hardwareMap.get(Servo.class, "sort");//3 ES (Port 3, Expansion Hub Servo Slots)
         sort.setDirection(Servo.Direction.FORWARD);
 
-        LRL.setDirection(DcMotor.Direction.FORWARD);
-        LFB.setDirection(DcMotor.Direction.FORWARD);
-        RRL.setDirection(DcMotor.Direction.REVERSE);
-        RFB.setDirection(DcMotor.Direction.REVERSE);
+        LRL.setDirection(DcMotor.Direction.REVERSE);
+        LFB.setDirection(DcMotor.Direction.REVERSE);
+        RRL.setDirection(DcMotor.Direction.FORWARD);
+        RFB.setDirection(DcMotor.Direction.FORWARD);
         intake.setDirection(DcMotor.Direction.REVERSE);
         bFly.setDirection(DcMotor.Direction.FORWARD);
-        tFly.setDirection(DcMotor.Direction.REVERSE);
+        tFly.setDirection(DcMotor.Direction.FORWARD);
         for (CRServo servo:
              pRoll) {
             servo.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -280,10 +281,12 @@ public class Robot {
         }
 
         if(totLoad == totCode){
+            flyPower(true);
             for (int color:Globals.code) {
+                sleep(5000);
                 outtake(color);
 
-                sleep(500); //Wait 500ms then do the next one
+                sleep(1500); //Wait 500ms then do the next one
             }
         }
 
@@ -360,14 +363,16 @@ public class Robot {
     }
 
     public void sort(int color) {
-        intakePower(true);
+        if (color == 0){
+            sort.setPosition(sortMid);
+        } else {
+            intakePower(true);
 
-        if(color == 1){
-            sort.setPosition(sortMid+sortInc);
-            return;
-        }else if (color == 2){
-            sort.setPosition(sortMid-sortInc);
-            return;
+            if(color == 1){
+                sort.setPosition(sortMid+sortInc);
+            }else if (color == 2){
+                sort.setPosition(sortMid-sortInc);
+            }
         }
     } //0 = No ball, 1 = Purple, 2 = Green
 
@@ -408,12 +413,12 @@ public class Robot {
             //allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
         }
 
-        for (int i = 0; i < codeIDs.length; i++) {
-            if (codeIDs[i] == codeID) {
-                codeID = i;
-                break;// return index when found
-            }
-        }
+//        for (int i = 0; i < codeIDs.length; i++) {
+//            if (codeIDs[i] == codeID) {
+//                codeID = i;
+//                break;// return index when found
+//            }
+//        }
 
 //        if (Globals.code[0] == 0){
 //            Globals.code = codes[codeID];
@@ -445,24 +450,27 @@ public class Robot {
         Pose3D botPose = null;
         if(llResult != null && llResult.isValid()){
             for (LLResultTypes.FiducialResult fiducial:llResult.getFiducialResults()) {
-                if (fiducial.getFiducialId() == 20 && Globals.alliance == 1) {
-                    //botPose = fiducial.getTargetPoseRobotSpace();
+                if (fiducial.getFiducialId() != codeIDs[0] && fiducial.getFiducialId() != codeIDs[1] && fiducial.getFiducialId() != codeIDs[2]) {
+                    botPose = fiducial.getTargetPoseRobotSpace();
                 }
             }
 
-            botPose = llResult.getBotpose();
-            telemetry.addData("Tx", llResult.getTx());
-            telemetry.addData("Ty", llResult.getTy());
-            telemetry.addData("Ta", llResult.getTa());
+            //botPose = llResult.getBotpose();
+            if (botPose != null){
+                telemetry.addData("Tx", botPose.getPosition().x);
+                telemetry.addData("Ty", botPose.getPosition().y);
+                telemetry.addData("Tz", botPose.getPosition().z);
+                telemetry.addData("Ta", llResult.getTa());
 
-            double distance = Math.sqrt(Math.pow(botPose.getPosition().x+targetXOffset, 2) + Math.pow(botPose.getPosition().y+targetXOffset, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
+                double distance = Math.sqrt(Math.pow((botPose.getPosition().x*39.3701) + targetXOffset, 2) + Math.pow((botPose.getPosition().z*39.3701) + targetXOffset, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
 
-            double g = 386.09;
-            double velocity = Math.sqrt((g*Math.pow(distance-flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(flyAngle)),2)*(((distance-flyXOffset)*Math.tan(Math.toRadians(flyAngle)))-(distance-flyYOffset))));
-            double rpm = (60*velocity)/(flywheelDiameter*Math.toRadians(180));
-            double power = rpm/(maxRPM*flyEfficency);
+                double g = 386.09;
+                double velocity = Math.sqrt((g*Math.pow(distance-flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(flyAngle)),2)*(((distance-flyXOffset)*Math.tan(Math.toRadians(flyAngle)))-((botPose.getPosition().y*39.3701)-flyYOffset))));
+                double rpm = (60*velocity)/(flywheelDiameter*Math.toRadians(180));
+                double power = rpm/(maxRPM*flyEfficency);
 
-            flySpeed = Math.abs(power);
+                flySpeed = Math.abs(power);
+            }
         }
     } //Find distance and get needed power
 
@@ -526,6 +534,6 @@ public class Robot {
     public void update(){
         incremented = false;
 
-        sort();
+        //sort();
     } //Put things to do in the loop here
 }
