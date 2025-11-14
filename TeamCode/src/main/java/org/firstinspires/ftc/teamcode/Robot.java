@@ -36,7 +36,7 @@ public class Robot {
     public boolean opMode = false; //True is auton
 
     private double sortMid = 0.5;
-    private double sortInc = 0.25;
+    private double sortInc = 0.2;
     public boolean sortOn = true;//True is sorting
 
     public double driveSpeed = 0.5; //Default speed of drivetrain
@@ -280,15 +280,17 @@ public class Robot {
             if(Globals.code[l] != 0) { totCode += Globals.code[l];}
         }
 
-        if(totLoad == totCode){
+       //if(totLoad == totCode){
             flyPower(true);
             for (int color:Globals.code) {
                 sleep(5000);
                 outtake(color);
 
-                sleep(1500); //Wait 500ms then do the next one
+                sleep(1250); //Wait 500ms then do the next one
+                outtake(0);
             }
-        }
+            flyPower(false);
+        //}
 
     } //Automatically shoots by the code
 
@@ -392,17 +394,18 @@ public class Robot {
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
 
-            for (int i = 0; i < llResult.getFiducialResults().size(); i++) {
-                for (int h = 0; i < codeIDs.length; h++) {
-                    if (codeIDs[h] == codeID) {
-                        codeID = i;
+            for (int i = 0; i < llResult.getFiducialResults().size()-1; i++) {
+                for (int h = 0; h < codeIDs.length; h++) {
+                    if (codeIDs[h] == llResult.getFiducialResults().get(i).getFiducialId()) {
+                        codeID = h;
                         if (Globals.code[0] == 0){
                             Globals.code = codes[codeID];
                         }
                         break;// return index when found
                     } else {
+                        allianceID = llResult.getFiducialResults().get(i).getFiducialId();
                         if(Globals.alliance == 0){
-                            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
+                            if(allianceID == 20){Globals.alliance = 2;} else if (allianceID== 24){Globals.alliance = 1;}//Set to opposite color than what it sees
                         }
                     }
                 }

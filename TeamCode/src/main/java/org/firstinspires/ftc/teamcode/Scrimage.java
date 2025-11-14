@@ -20,28 +20,28 @@ public class Scrimage extends LinearOpMode{
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            robot.update();
+            //robot.update();
             telemetry.update();
 
-            robot.drive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            robot.drive(robot.overide(-gamepad1.left_stick_x,-gamepad2.left_stick_x), robot.overide(gamepad1.left_stick_y,gamepad2.left_stick_y), robot.overide(gamepad1.right_stick_x,gamepad2.right_stick_x));
 
-            if(gamepad1.xWasPressed()){robot.outtake(1);}
-            if(gamepad1.bWasPressed()){robot.outtake(2);}
+            if(robot.overide(gamepad1.xWasPressed(),gamepad2.xWasPressed())){robot.outtake(1);}
+            if(robot.overide(gamepad1.bWasPressed(),gamepad2.bWasPressed())){robot.outtake(2);}
 
-            if(gamepad1.xWasReleased()){robot.outtake(0);}
-            if(gamepad1.bWasReleased()){robot.outtake(0);}
+            if(robot.overide(gamepad1.xWasReleased(),gamepad2.xWasReleased())){robot.outtake(0);}
+            if(robot.overide(gamepad1.bWasReleased(),gamepad2.bWasReleased())){robot.outtake(0);}
 
-            if(gamepad1.aWasPressed()){robot.flyPower();}
-            if(gamepad1.yWasPressed()){robot.intakePower();}
+            if(robot.overide(gamepad1.aWasPressed(),gamepad2.aWasPressed())){robot.flyPower();}
+            if(robot.overide(gamepad1.yWasPressed(),gamepad2.yWasPressed())){robot.intakePower();}
 
             //if(gamepad1.aWasReleased()){robot.tFly.setPower(0);}
             //if(gamepad1.yWasReleased()){robot.intake.setPower(0);}
 
-            if(gamepad1.dpad_left){
+            if(robot.overide(gamepad1.dpad_left, gamepad2.dpad_left)){
                 robot.sort(2);
-            } else if (gamepad1.dpad_right){
+            } else if (robot.overide(gamepad1.dpad_right, gamepad2.dpad_right)){
                 robot.sort(1);
-            } else if(gamepad1.dpadDownWasPressed()){
+            } else if(robot.overide(gamepad1.dpadDownWasPressed(), gamepad2.dpadLeftWasPressed())){
                 if(robot.sortOn){
                     robot.sortOn = false;
                 } else {
@@ -55,7 +55,7 @@ public class Scrimage extends LinearOpMode{
                 }
             }
 
-            if(gamepad1.dpad_up){
+            if(robot.overide(gamepad1.dpad_up, gamepad2.dpad_up)){
                 robot.estimatePower();
             }
 
@@ -63,14 +63,16 @@ public class Scrimage extends LinearOpMode{
                 //robot.outtakeByCode();
             }
 
-            if (gamepad1.rightBumperWasPressed()){
+            if (robot.overide(gamepad1.rightBumperWasPressed(), gamepad2.rightBumperWasPressed())){
                 robot.flySpeed += robot.flySpeedIncre;
                 robot.adjustFlySpeed();
-            } else if (robot.triggerAsButtonPress(gamepad1.right_trigger) && !robot.incremented){
+            } else if (robot.overide(robot.triggerAsButtonPress(gamepad1.right_trigger),robot.triggerAsButtonPress(gamepad2.right_trigger)) && !robot.incremented){
                 robot.flySpeed -= robot.flySpeedIncre;
                 robot.adjustFlySpeed();
+                robot.incremented = true;
+            } else {
+                robot.incremented = false;
             }
-
             telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
             telemetry.addLine("Sort On: "+ robot.sortOn);
         }

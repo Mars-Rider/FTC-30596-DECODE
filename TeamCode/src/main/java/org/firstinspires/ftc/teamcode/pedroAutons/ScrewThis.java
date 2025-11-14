@@ -18,16 +18,17 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 public class ScrewThis extends OpMode {
-    Robot robot = new Robot(hardwareMap,telemetry);
+    Robot robot;
 
     @Override
     public void init() {
+        robot = new Robot(hardwareMap, telemetry);
         robot.readFieldData();
     }
 
     @Override
     public void start() {
-        robot.drive(0,1,0);
+        robot.drive(0,-1,0);
         sleep(2000);
         robot.drive(0,0,0);
     }
