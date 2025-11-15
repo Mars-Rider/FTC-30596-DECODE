@@ -66,12 +66,9 @@ public class Scrimage extends LinearOpMode{
             if (robot.overide(gamepad1.rightBumperWasPressed(), gamepad2.rightBumperWasPressed())){
                 robot.flySpeed += robot.flySpeedIncre;
                 robot.adjustFlySpeed();
-            } else if (robot.overide(robot.triggerAsButtonPress(gamepad1.right_trigger),robot.triggerAsButtonPress(gamepad2.right_trigger)) && !robot.incremented){
+            } else if (robot.overide(robot.triggerAsButtonPress(gamepad1.right_trigger),robot.triggerAsButtonPress(gamepad2.right_trigger))){
                 robot.flySpeed -= robot.flySpeedIncre;
                 robot.adjustFlySpeed();
-                robot.incremented = true;
-            } else {
-                robot.incremented = false;
             }
             telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
             telemetry.addLine("Sort On: "+ robot.sortOn);

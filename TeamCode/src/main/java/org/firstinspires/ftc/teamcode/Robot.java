@@ -37,7 +37,7 @@ public class Robot {
 
     private double sortMid = 0.5;
     private double sortInc = 0.2;
-    public boolean sortOn = true;//True is sorting
+    public boolean sortOn = false;//True is sorting
 
     public double driveSpeed = 0.5; //Default speed of drivetrain
     public double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
@@ -178,16 +178,13 @@ public class Robot {
         return Math.abs(news) > analogThreshold;
     }
 
-    public boolean triggerAsButtonPress(double news){
+    boolean lastTrigger = false;
+    public boolean triggerAsButtonPress(double triggerVal){
         double analogThreshold = 0.25;
-        if(trigger == true && Math.abs(news) > analogThreshold){
-            trigger = false;
-            return true;
-        } else if (Math.abs(news) < analogThreshold){
-            trigger = true;
-            return false;
-        }
-        return false;
+        boolean current = triggerVal > analogThreshold;
+        boolean pressed = current && !lastTrigger;
+        lastTrigger = current;
+        return pressed;
     }
 
     /*public void driveWithControllers(double forward, double strafe, double turn, boolean scale) {
