@@ -1,16 +1,14 @@
 package org.firstinspires.ftc.teamcode.Testing;
 
-import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Globals;
-import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.Robot.Globals;
+import org.firstinspires.ftc.teamcode.Robot.Robot;
 
 import java.util.Arrays;
 
-@TeleOp
+@TeleOp(name = "FieldData", group = "Tests")
 public class FieldData extends LinearOpMode{
 
     @Override
