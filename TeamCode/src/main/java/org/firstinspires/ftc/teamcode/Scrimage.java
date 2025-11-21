@@ -13,6 +13,7 @@ public class Scrimage extends LinearOpMode{
     public void runOpMode() throws InterruptedException {
         //Run at Initialization
         Robot robot = new Robot(hardwareMap, telemetry);
+        robot.startDrivetrain();
 
         waitForStart();
         //On Start
@@ -26,7 +27,7 @@ public class Scrimage extends LinearOpMode{
             //robot.update();
             telemetry.update();
 
-            robot.drive(robot.overide(-gamepad1.left_stick_x,-gamepad2.left_stick_x), robot.overide(gamepad1.left_stick_y,gamepad2.left_stick_y), robot.overide(gamepad1.right_stick_x,gamepad2.right_stick_x));
+            robot.drivetrain.drive(robot.overide(-gamepad1.left_stick_x,-gamepad2.left_stick_x), robot.overide(gamepad1.left_stick_y,gamepad2.left_stick_y), robot.overide(gamepad1.right_stick_x,gamepad2.right_stick_x));
 
             if(robot.overide(gamepad1.xWasPressed(),gamepad2.xWasPressed())){robot.outtake(1);}
             if(robot.overide(gamepad1.bWasPressed(),gamepad2.bWasPressed())){robot.outtake(2);}
@@ -45,17 +46,9 @@ public class Scrimage extends LinearOpMode{
             } else if (robot.overide(gamepad1.dpad_right, gamepad2.dpad_right)){
                 robot.sort(1);
             } else if(robot.overide(gamepad1.dpadDownWasPressed(), gamepad2.dpadLeftWasPressed())){
-                if(robot.sortOn){
-                    robot.sortOn = false;
-                } else {
-                    robot.sortOn = true;
-                }
+                robot.autoSorting();
             } else {
-                if(robot.sortOn){
-                    robot.sort();
-                } else {
-                    robot.sort(0);
-                }
+                robot.sort();
             }
 
             if(robot.overide(gamepad1.dpad_up, gamepad2.dpad_up)){

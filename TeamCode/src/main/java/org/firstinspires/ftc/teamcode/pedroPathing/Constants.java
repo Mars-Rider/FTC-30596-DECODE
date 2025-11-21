@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.control.FilteredPIDFCoefficients;
+import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -13,9 +15,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(5)
-            .forwardZeroPowerAcceleration(0)
-            .lateralZeroPowerAcceleration(0);//In KG
+            .mass(3)
+            .forwardZeroPowerAcceleration(-50.46925775794452)
+            .lateralZeroPowerAcceleration(-148.03853962668938)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.03))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.03))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.1,0.0,0.01,0.6,0.0))
+            .centripetalScaling(0.005);//In KG
+    ;//In KG
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -37,24 +44,24 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(0)//Found by tuner
-            .yVelocity(0);//Found by tuner
+            .xVelocity(76.39851662694285)
+            .yVelocity(61.5137305257824);
 
 
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
-            .forwardEncoder_HardwareMapName("leftFront")
-            .strafeEncoder_HardwareMapName("rightRear")
+            .forwardEncoder_HardwareMapName("LFB")
+            .strafeEncoder_HardwareMapName("RRL")
             .forwardEncoderDirection(Encoder.FORWARD)
             .strafeEncoderDirection(Encoder.FORWARD)
-            .forwardPodY(0)//Inch
-            .strafePodX(0)//Inch
-            .forwardTicksToInches(0)//Found by forward ticks tuner
-            .strafeTicksToInches(0)//Found by forward ticks tuner
+            .forwardPodY(0.95)//Inch
+            .strafePodX(3)//Inch
+            .forwardTicksToInches(0.002983033994158225)
+            .strafeTicksToInches(0.0029852602773804346)
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                            RevHubOrientationOnRobot.UsbFacingDirection.LEFT
+                            RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                            RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             );
 

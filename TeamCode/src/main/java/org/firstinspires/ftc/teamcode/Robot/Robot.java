@@ -24,6 +24,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+
 import org.firstinspires.ftc.teamcode.Swerve.Swerve;
 
 
@@ -32,8 +34,10 @@ public class Robot {
     public HardwareMap map;
     public final Telemetry telemetry;
 
-    public DcMotor LRL, LFB, RRL, RFB;
-    public DcMotor bFly, tFly, intake;
+    public Drivetrain drivetrain;
+
+    public DcMotorEx bFly, tFly;
+    public DcMotor intake;
     public Servo sort;
 
     public boolean opMode = false; //True is auton
@@ -42,8 +46,6 @@ public class Robot {
     public static double sortInc = 0.2;
     public boolean sortOn = false;//True is sorting
 
-    public static double driveSpeed = 0.5; //Default speed of drivetrain
-    public static double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
     public boolean facingGoal = false; //If true, robot is facing the goal at all times and controls turn into global x and y, False is no more facing goal and it uses local driving
 
     //static public int alliance = 0; //0 = N/A, 1 = Blue, 2 = Red
@@ -54,8 +56,8 @@ public class Robot {
 
     private boolean fly = false; //True = on
 
-    public double flySpeed = 0.45; //Speed of flywheel
-    public double flySpeedIncre = 0.05; //Default increase/dececrease of the speed of flywheel
+    public double flySpeed = 200; //Speed of flywheel
+    public double flySpeedIncre = 50; //Default increase/dececrease of the speed of flywheel
     public boolean incremented = false;
 
     private double flyXOffset = 4;
@@ -82,19 +84,14 @@ public class Robot {
     public static PIDFCoefficients goalPIDCoefficients = new PIDFCoefficients(0.3,0,0,0);
     private PIDFController goalPID = new PIDFController(goalPIDCoefficients);
 
+
     public Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         this.map = hardwareMap;
 
-        //Drivetrain
-        LRL = hardwareMap.get(DcMotor.class, "LRL");//2 C (Port 2, Control Hub Motors)
-        LFB = hardwareMap.get(DcMotor.class, "LFB");//0 C
-        RRL = hardwareMap.get(DcMotor.class, "RRL");//3 C
-        RFB = hardwareMap.get(DcMotor.class, "RFB");//1 C
-
         //Flywheels
-        bFly = hardwareMap.get(DcMotor.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
-        tFly = hardwareMap.get(DcMotor.class, "gFly");//1 E
+        bFly = hardwareMap.get(DcMotorEx.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
+        tFly = hardwareMap.get(DcMotorEx.class, "gFly");//1 E
 
         //Rollers
         pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES
@@ -107,13 +104,9 @@ public class Robot {
         sort = hardwareMap.get(Servo.class, "sort");//3 ES (Port 3, Expansion Hub Servo Slots)
         sort.setDirection(Servo.Direction.FORWARD);
 
-        LRL.setDirection(DcMotor.Direction.REVERSE);
-        LFB.setDirection(DcMotor.Direction.REVERSE);
-        RRL.setDirection(DcMotor.Direction.FORWARD);
-        RFB.setDirection(DcMotor.Direction.FORWARD);
         intake.setDirection(DcMotor.Direction.REVERSE);
-        bFly.setDirection(DcMotor.Direction.FORWARD);
-        tFly.setDirection(DcMotor.Direction.FORWARD);
+        bFly.setDirection(DcMotorEx.Direction.FORWARD);
+        tFly.setDirection(DcMotorEx.Direction.FORWARD);
         for (CRServo servo:
              pRoll) {
             servo.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -123,21 +116,13 @@ public class Robot {
             servo.setDirection(DcMotorSimple.Direction.REVERSE);
         }
 
-        RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        LRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        LFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        tFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        bFly.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        tFly.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        RRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        LRL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        LFB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        bFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        tFly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        bFly.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        tFly.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         //Huksy Lens
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
@@ -199,49 +184,35 @@ public class Robot {
         controlLeftPod(Math.atan2(strafe, B), (LeftPower/max) * scalar);
     }*/ //Pedro Teleop instead - just put all drive in the pedro
 
-    public void controlRightPod(double Angle, double Power) {
-        double strafePower = Power * Math.cos(Angle);
-        double forwardPower = Power * Math.sin(Angle);
-        RRL.setPower(strafePower);
-        RFB.setPower(forwardPower);
-    }
-
-    public void controlLeftPod(double Angle, double Power) {
-        double strafePower = Power * Math.cos(Angle);
-        double forwardPower = Power * Math.sin(Angle);
-        LRL.setPower(strafePower);
-        LFB.setPower(forwardPower);
-    }
-
 //    //Flywheels
     public void flyPower() {
         if(!fly){
-            bFly.setPower(flySpeed);
-            tFly.setPower(flySpeed);
+            bFly.setVelocity(flySpeed);
+            tFly.setVelocity(flySpeed);
             fly = true;
         } else {
-            bFly.setPower(0);
-            tFly.setPower(0);
+            bFly.setVelocity(flySpeed/4);
+            tFly.setVelocity(flySpeed/4);
             fly = false;
         }
     } //Turn on and off power of flywheel
 
     public void adjustFlySpeed(){
         if(fly){
-            bFly.setPower(flySpeed);
-            tFly.setPower(flySpeed);
+            bFly.setVelocity(flySpeed);
+            tFly.setVelocity(flySpeed);
         }
     }
 
     public void flyPower(boolean manual) { //True is on, false is off
         //if(fly != manual){ //Only go forward if manual isn't the same as fly
             if(manual){//True is on
-                bFly.setPower(flySpeed);
-                tFly.setPower(flySpeed);
+                bFly.setVelocity(flySpeed);
+                tFly.setVelocity(flySpeed);
                 fly = true;
             } else {
-                bFly.setPower(0);
-                tFly.setPower(0);
+                bFly.setVelocity(flySpeed/4);
+                tFly.setVelocity(flySpeed/4);
                 fly = false;
             }
         //}
@@ -344,17 +315,38 @@ public class Robot {
         return closestColor; //Return the color that comes
     } //Finds the closest color that is infront of the robot (Husky lens)
 
+    public void autoSorting() {
+        if(!sortOn){
+            sortOn = true;
+        } else {
+            sortOn = false;
+        }
+    } //Turn on and off power of intake
+
+    public void autoSorting(boolean manual) { //True is on, false is off
+        if(sortOn != manual){ //Only go forward if manual isn't the same as fly
+            if(manual){//True is on
+                sortOn = true;
+            } else {
+                sortOn = false;
+            }
+        }
+    } //Turn on and off power of intake based off of what the input is
+
+
     public void sort() {
-        intakePower(true);
+        if(sortOn){
+            intakePower(true);
 
-        int color = closestColor();
+            int color = closestColor();
 
-        if(color == 1){ // purple
-            sort.setPosition(sortMid+sortInc);
-            return;
-        }else if (color == 2){ //green
-            sort.setPosition(sortMid-sortInc);
-            return;
+            if(color == 1){ // purple
+                sort.setPosition(sortMid+sortInc);
+            }else if (color == 2){ //green
+                sort.setPosition(sortMid-sortInc);
+            }
+        } else {
+            sort(0);
         }
     }
 
@@ -373,14 +365,18 @@ public class Robot {
     } //0 = No ball, 1 = Purple, 2 = Green
 
     //Limelight
+    public void getLimelight(){
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        llResult = limelight.getLatestResult();
+    }
+
     public void readFieldData() {
         int codeID = 0;
         int allianceID = 0;
 
         //Get data
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw());
-        llResult = limelight.getLatestResult();
+        getLimelight();
         Pose3D botPose = null;
         if(llResult != null && llResult.isValid()){
             botPose = llResult.getBotpose(); //Get position in relation to april tag (i think 90 is straight on)
@@ -434,16 +430,36 @@ public class Robot {
         }
     } //Sets the code
 
-
+    public void faceGoal(){
+        if(!facingGoal){
+            facingGoal = true;
+            goalPID.setTargetPosition(0);
+            goalPID.reset();
+        } else {
+            facingGoal = false;
+        }
+    }
     public double faceGoalPower() {
-        //Pedro
-        return 0;
-    }//Track april tag
+            getLimelight();
+            Pose3D botPose = null;
+            if(llResult != null && llResult.isValid() && facingGoal){
+                for (LLResultTypes.FiducialResult fiducial:llResult.getFiducialResults()) {
+                    if (fiducial.getFiducialId() != codeIDs[0] && fiducial.getFiducialId() != codeIDs[1] && fiducial.getFiducialId() != codeIDs[2]) {
+                        botPose = fiducial.getTargetPoseRobotSpace();
+                    }
+                }
+
+                if(botPose == null){return 0;}//April tag for tracking is nonexistent or not in camera
+
+                goalPID.updatePosition(Math.atan2(botPose.getPosition().z,botPose.getPosition().x));
+                telemetry.addLine("Goal PID Error: " + goalPID.getError());
+                return goalPID.run();
+            } else {return 0;}
+    }
+
     public void estimatePower() {
         //Get data
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw());
-        llResult = limelight.getLatestResult();
+        getLimelight();
         Pose3D botPose = null;
         if(llResult != null && llResult.isValid()){
             for (LLResultTypes.FiducialResult fiducial:llResult.getFiducialResults()) {
@@ -463,38 +479,17 @@ public class Robot {
 
                 double g = 386.09;
                 double velocity = Math.sqrt((g*Math.pow(distance-flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(flyAngle)),2)*(((distance-flyXOffset)*Math.tan(Math.toRadians(flyAngle)))-((botPose.getPosition().y*39.3701)-flyYOffset))));
-                double rpm = (60*velocity)/(flywheelDiameter*Math.toRadians(180));
-                double power = rpm/(maxRPM*flyEfficency);
+                double angularVelocity = (velocity)/(flywheelDiameter/2);
 
-                flySpeed = Math.abs(power);
+                flySpeed = Math.abs(angularVelocity*flyEfficency);
             }
         }
     } //Find distance and get needed power
 
     //Face goal PID (HELL)
 
-    public void SwerveDrive(double x, double y, double r) {
-
-    }
-
-    public void drive(double x, double y, double r){
-        double[] wheelPowers = {0,0,0,0}; //Fr, fl, br, bl
-
-        wheelPowers[0] = y-x-r;
-        wheelPowers[1] = y+x+r;
-        wheelPowers[2] = y-x+r;
-        wheelPowers[3] = y+x-r;
-
-        double m = Math.max(1,Math.max(Math.abs(wheelPowers[0]),Math.max(Math.abs(wheelPowers[1]),Math.max(Math.abs(wheelPowers[2]),Math.abs(wheelPowers[3])))));
-        wheelPowers[0] /= m;
-        wheelPowers[1] /= m;
-        wheelPowers[2] /= m;
-        wheelPowers[3] /= m;
-
-        LFB.setPower(wheelPowers[1]);
-        LRL.setPower(wheelPowers[2]);
-        RFB.setPower(wheelPowers[0]);
-        RRL.setPower(wheelPowers[3]);
+    public void startDrivetrain(){
+        drivetrain = new Drivetrain(map,telemetry);
     }
 
     public void start(){
@@ -502,8 +497,9 @@ public class Robot {
     } //Put things to do in the loop here
 
     public void update(){
-        incremented = false;
+       if (drivetrain != null){
+           drivetrain.auxInputs[2] = faceGoalPower();
+       }
 
-        //sort();
     } //Put things to do in the loop here
 }

@@ -20,9 +20,9 @@ public class ScrewThis extends OpMode {
 
     @Override
     public void start() {
-        robot.drive(0,-1,0);
+        robot.drivetrain.drive(0,-1,0);
         sleep(2000);
-        robot.drive(0,0,0);
+        robot.drivetrain.drive(0,0,0);
     }
 
     @Override

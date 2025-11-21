@@ -65,9 +65,9 @@ public class TeleOpMode extends LinearOpMode{
                 );
                     //This is how it looks with slowMode on
                 else follower.setTeleOpDrive(
-                        -gamepad1.left_stick_y * robot.driveSpeedSlow,
-                        -gamepad1.left_stick_x * robot.driveSpeedSlow,
-                        -gamepad1.right_stick_x * robot.driveSpeedSlow,
+                        -gamepad1.left_stick_y * robot.drivetrain.driveSpeedSlow,
+                        -gamepad1.left_stick_x * robot.drivetrain.driveSpeedSlow,
+                        -gamepad1.right_stick_x * robot.drivetrain.driveSpeedSlow,
                         true // Robot Centric
                 );
             //}if(gamepad1.y){robot.outtakeByCode();}
