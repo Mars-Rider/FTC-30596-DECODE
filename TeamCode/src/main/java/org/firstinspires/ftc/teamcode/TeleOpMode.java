@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Robot.Globals;
 import org.firstinspires.ftc.teamcode.Robot.Robot;
+import org.firstinspires.ftc.teamcode.Robot.Settings;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import com.pedropathing.follower.Follower;
@@ -81,12 +82,12 @@ public class TeleOpMode extends LinearOpMode{
 
             if (gamepad1.right_bumper && !robot.incremented){
                 if(robot.flySpeed > 0.05){
-                robot.flySpeed += robot.flySpeedIncre;
+                robot.flySpeed += Settings.flySpeedIncre;
                 }
                 robot.incremented = true;
             } else if (robot.triggerAsButton(gamepad1.right_trigger) && !robot.incremented){
                 if(robot.flySpeed <= 1){
-                robot.flySpeed += robot.flySpeedIncre;
+                robot.flySpeed += Settings.flySpeedIncre;
                 }
                 robot.incremented = true;
             }

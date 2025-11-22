@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(3)
+            .mass(11.3)
             .forwardZeroPowerAcceleration(-50.46925775794452)
             .lateralZeroPowerAcceleration(-148.03853962668938)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.03))
@@ -43,8 +43,8 @@ public class Constants {
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(76.39851662694285)
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)//Strafe and
+            .xVelocity(69.40212946896543)
             .yVelocity(61.5137305257824);
 
 
