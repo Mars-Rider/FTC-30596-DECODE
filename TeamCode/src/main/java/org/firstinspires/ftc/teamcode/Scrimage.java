@@ -19,7 +19,7 @@ public class Scrimage extends LinearOpMode{
         Robot robot = new Robot(hardwareMap, telemetry);
         robot.startDrivetrain();
 
-        LEDChannel auxLEDs = robot.LEDs.addChannel("auxLEDs");
+        //LEDChannel auxLEDs = robot.LEDs.addChannel("auxLEDs");
 
         waitForStart();
         //On Start
@@ -54,12 +54,16 @@ public class Scrimage extends LinearOpMode{
                 robot.sort();
             }
 
-            if(robot.overide(gamepad1.dpad_up, gamepad2.dpad_up)){
-                robot.estimatePower();
+            if(robot.overide(gamepad1.leftBumperWasPressed(), gamepad2.leftBumperWasPressed())){
+                if(robot.intakeDirection != 1){
+                    robot.intakeDirection = 1;
+                } else {
+                    robot.intakeDirection = -1;
+                }
             }
 
             if(gamepad1.leftBumperWasPressed()){
-                robot.drivetrain.slowMode();
+                //robot.drivetrain.slowMode();
             }
 
             if (robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger)) && !lastTrigger){
@@ -72,7 +76,7 @@ public class Scrimage extends LinearOpMode{
 
             if (gamepad1.dpad_down){
                 //Face Goal rn
-                robot.drivetrain.runTo(robot.faceGoalError(false));
+                //robot.drivetrain.runTo(robot.faceGoalError(false));
             }
             
             if (robot.overide(gamepad1.rightBumperWasPressed(), gamepad2.rightBumperWasPressed())){

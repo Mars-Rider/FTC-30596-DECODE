@@ -129,8 +129,11 @@ public class Drivetrain {
     }
 
     public void update(){
-        follower.update();
-        telemetryM.update();
+
+        if(pedroDriving){
+            follower.update();
+            telemetryM.update();
+        }
     }
 
     public void SwerveDrive(double x, double y, double r) {

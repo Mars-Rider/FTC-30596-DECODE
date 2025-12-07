@@ -66,6 +66,7 @@ public class Robot {
     private double rollSpeed = 0.75; //Speed of the rollers
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 1; //Speed of intake
+    public int intakeDirection = 1;
 
     private HuskyLens huskyLens;
     private Limelight3A limelight;
@@ -129,8 +130,8 @@ public class Robot {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        LEDs = new LEDController(hardwareMap,"leds");
-        flyLEDs = LEDs.addChannel("flyLEDs");
+        //LEDs = new LEDController(hardwareMap,"leds");
+        //flyLEDs = LEDs.addChannel("flyLEDs");
     }
 
     public double overide (double primary, double override){
@@ -232,7 +233,7 @@ public class Robot {
 
     public void intakePower(boolean manual) { //True is on, false is off
             if(manual){//True is on
-                intake.setPower(intakeSpeed);
+                intake.setPower(intakeDirection*intakeSpeed);
                 intakeOn = true;
             } else {
                 intake.setPower(0);
@@ -474,9 +475,9 @@ public class Robot {
 
        double tolerance = 5; //DegreesSec
         if(Math.abs(tFly.getVelocity(AngleUnit.RADIANS)-flySpeed) < tolerance && Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed) < tolerance){
-            flyLEDs.setColor(Color.GREEN);
+            //flyLEDs.setColor(Color.GREEN);
         } else {
-            flyLEDs.setColor(Color.BLUE);
+            //flyLEDs.setColor(Color.BLUE);
         }
 
         drivetrain.update();
