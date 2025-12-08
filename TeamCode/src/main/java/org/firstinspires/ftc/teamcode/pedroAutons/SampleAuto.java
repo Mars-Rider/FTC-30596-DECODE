@@ -198,8 +198,8 @@ public class SampleAuto extends OpMode {
         Robot robot = new Robot(hardwareMap, telemetry);
         robot.opMode = true;
 
-        robot.readFieldData();
-        startPose = Globals.startPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE);
+        //robot.readFieldData();
+        //startPose = Globals.startPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE);
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();

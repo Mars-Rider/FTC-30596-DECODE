@@ -179,8 +179,8 @@ public class Robot {
         } else {
 //                bFly.setVelocity(flySpeed/4);
 //                tFly.setVelocity(flySpeed/4);
-            bFly.setPower(flySpeed);
-            tFly.setPower(flySpeed);
+            bFly.setPower(0);
+            tFly.setPower(0);
             fly = false;
         }
     } //Turn on and off power of flywheel based off of what the input is
