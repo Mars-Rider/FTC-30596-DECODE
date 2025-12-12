@@ -198,6 +198,7 @@ public class Robot {
                     for (CRServo servo : pRoll) {
                         servo.setPower(rollSpeed);
                     }
+                    pOut = true;
                 } else {
                     for (CRServo servo : pRoll) {
                         servo.setPower(0);
@@ -209,6 +210,7 @@ public class Robot {
                     for (CRServo servo : gRoll) {
                         servo.setPower(rollSpeed);
                     }
+                    gOut = true;
                 } else {
                     for (CRServo servo : gRoll) {
                         servo.setPower(0);
