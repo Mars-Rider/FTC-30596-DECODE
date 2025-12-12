@@ -22,7 +22,7 @@ public class SampleAuto extends OpMode {
 
     private int pathState;
 
-    private Pose startPose = new Pose(28.5, 128, Math.toRadians(180)); // Backup Start Pose of our robot.
+    private Pose startPose = new Pose(28.5, 10, Math.toRadians(90)); // Backup Start Pose of our robot.
     private final Pose scorePose = new Pose(60, 85, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.

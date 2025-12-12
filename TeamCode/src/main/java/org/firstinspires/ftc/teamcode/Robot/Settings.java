@@ -6,8 +6,8 @@ import com.bylazar.configurables.annotations.Configurable;
 public class Settings {
     public static double sortMid = 0.5;
     public static double sortInc = 0.2;
-    //public static double flySpeedIncre = 50;
-    public static double flySpeedIncre = 0.05;
+    public static double flySpeedIncre = 5;
+    //public static double flySpeedIncre = 0.05;
 
     public static class powerEstimate {
         public static double flyXOffset = 4;

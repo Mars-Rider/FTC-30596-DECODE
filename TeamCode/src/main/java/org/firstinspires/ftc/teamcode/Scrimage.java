@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Robot.Globals;
 import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.LEDChannel;
 import org.firstinspires.ftc.teamcode.Robot.Robot;
@@ -38,8 +39,8 @@ public class Scrimage extends LinearOpMode{
             if(robot.overide(gamepad1.xWasPressed(),gamepad2.xWasPressed())){robot.outtake(1);}
             if(robot.overide(gamepad1.bWasPressed(),gamepad2.bWasPressed())){robot.outtake(2);}
 
-            if(robot.overide(gamepad1.xWasReleased(),gamepad2.xWasReleased())){robot.outtake(0);}
-            if(robot.overide(gamepad1.bWasReleased(),gamepad2.bWasReleased())){robot.outtake(0);}
+            //if(robot.overide(gamepad1.xWasReleased(),gamepad2.xWasReleased())){robot.outtake(0);}
+            //if(robot.overide(gamepad1.bWasReleased(),gamepad2.bWasReleased())){robot.outtake(0);}
 
             if(robot.overide(gamepad1.aWasPressed(),gamepad2.aWasPressed())){robot.flyPower();}
             if(robot.overide(gamepad1.yWasPressed(),gamepad2.yWasPressed())){robot.intakePower();}
@@ -48,7 +49,7 @@ public class Scrimage extends LinearOpMode{
                 robot.sort(2);
             } else if (robot.overide(gamepad1.dpad_right, gamepad2.dpad_right)){
                 robot.sort(1);
-            } else if(robot.overide(gamepad1.dpadDownWasPressed(), gamepad2.dpadLeftWasPressed())){
+            } else if(robot.overide(gamepad1.dpadDownWasPressed(), gamepad2.dpadDownWasPressed())){
                 robot.autoSorting();
             } else {
                 robot.sort();
@@ -91,6 +92,7 @@ public class Scrimage extends LinearOpMode{
             }
             telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
             telemetry.addLine("Sort On: "+ robot.sortOn);
+            telemetry.addLine("fly encoder: "+ robot.bFly.getVelocity(AngleUnit.RADIANS));
         }
     }
 }

@@ -159,7 +159,7 @@ public class Drivetrain {
         } else {
             double[] wheelPowers = {0,0,0,0}; //Fr, fl, br, bl
 
-            y *= -1;
+            y *= 1;
 
             wheelPowers[0] = (y-x-r) * (slowMode ? driveSpeedSlow : driveSpeed);
             wheelPowers[1] = (y+x+r) * (slowMode ? driveSpeedSlow : driveSpeed);

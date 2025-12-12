@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.LEDChannel;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 
 public class Robot {
@@ -56,8 +57,8 @@ public class Robot {
     // public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     private boolean fly = false; //True = on
-    //public double flySpeed = 200;
-    public double flySpeed = 0.65;
+    public double flySpeed = 65;
+    //public double flySpeed = 0.65;
 
     public boolean incremented = false;
 
@@ -85,7 +86,8 @@ public class Robot {
         tFly = hardwareMap.get(DcMotorEx.class, "gFly");//1 E
 
         //Rollers
-        pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES
+        pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES        pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
+
         pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
         gRoll[0] = hardwareMap.get(CRServo.class, "gR1");//5 C
         gRoll[1] = hardwareMap.get(CRServo.class, "gR2");//0 C
@@ -96,7 +98,7 @@ public class Robot {
         sort.setDirection(Servo.Direction.FORWARD);
 
         intake.setDirection(DcMotor.Direction.REVERSE);
-        bFly.setDirection(DcMotorEx.Direction.FORWARD);
+        bFly.setDirection(DcMotorEx.Direction.REVERSE);
         tFly.setDirection(DcMotorEx.Direction.FORWARD);
         for (CRServo servo:
              pRoll) {
@@ -108,7 +110,14 @@ public class Robot {
         }
 
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bFly.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        //bFly.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
+        MotorConfigurationType motorType = bFly.getMotorType().clone();
+        motorType.setTicksPerRev(112);  // your real encoder count
+        bFly.setMotorType(motorType);
+        bFly.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        bFly.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
         tFly.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -162,37 +171,49 @@ public class Robot {
 
     public void adjustFlySpeed(){
         if(fly){
-//            bFly.setVelocity(flySpeed);
-//            tFly.setVelocity(flySpeed);
-            bFly.setPower(flySpeed);
-            tFly.setPower(flySpeed);
+            flyPower(fly);
         }
     }
 
     public void flyPower(boolean manual) { //True is on, false is off
         if(manual){//True is on
-//                bFly.setVelocity(flySpeed);
-//                tFly.setVelocity(flySpeed);
-            bFly.setPower(flySpeed);
-            tFly.setPower(flySpeed);
+                bFly.setVelocity(flySpeed, AngleUnit.RADIANS);
+                tFly.setVelocity(flySpeed, AngleUnit.RADIANS);
+//            bFly.setPower(flySpeed, AngleUnit.RADIANS);
+//            tFly.setPower(flySpeed);
             fly = true;
         } else {
-//                bFly.setVelocity(flySpeed/4);
-//                tFly.setVelocity(flySpeed/4);
-            bFly.setPower(0);
-            tFly.setPower(0);
+                bFly.setVelocity(0);
+                tFly.setVelocity(0);
+//            bFly.setPower(0);
+//            tFly.setPower(0);
             fly = false;
         }
     } //Turn on and off power of flywheel based off of what the input is
 
+    private boolean pOut, gOut;
     public void outtake(int color) {
             if(color == 1) { //Purple
-                for (CRServo servo : pRoll) {
-                    servo.setPower(rollSpeed);
+                if(!pOut){
+                    for (CRServo servo : pRoll) {
+                        servo.setPower(rollSpeed);
+                    }
+                } else {
+                    for (CRServo servo : pRoll) {
+                        servo.setPower(0);
+                    }
+                    pOut = false;
                 }
             } else if (color == 2) { // Green
-                for (CRServo servo : gRoll) {
-                    servo.setPower(rollSpeed);
+                if(!gOut){
+                    for (CRServo servo : gRoll) {
+                        servo.setPower(rollSpeed);
+                    }
+                } else {
+                    for (CRServo servo : gRoll) {
+                        servo.setPower(0);
+                    }
+                    gOut = false;
                 }
             } else if (color == 0) { // Turn off
                 for (CRServo servo : pRoll) {
@@ -201,6 +222,9 @@ public class Robot {
                 for (CRServo servo : gRoll) {
                     servo.setPower(0);
                 }
+
+                pOut = false;
+                gOut = false;
             }
     } //Turn on power if needed and spin rollers based on the color
 
@@ -421,7 +445,9 @@ public class Robot {
     }
 
     public double faceGoalPower() {
-        return Math.min(1,Settings.goalKp * faceGoalError());
+        if (Math.abs(faceGoalError()) <=.5){faceGoal(false); return 0;} else {
+            return Math.min(1,Settings.goalKp * faceGoalError());
+        }
     }
 
     public void estimatePower() {
@@ -449,9 +475,9 @@ public class Robot {
                 double angularVelocity = (velocity)/(Settings.powerEstimate.flywheelDiameter/2);//Gets it in radians
                 double rpm = (60*velocity)/(Settings.powerEstimate.flywheelDiameter*Math.toRadians(180));
 
-                //flySpeed = Math.abs(angularVelocity*Settings.powerEstimate.flyEfficency);
+                flySpeed = Math.abs((angularVelocity/(2*Math.PI))*Settings.powerEstimate.flyEfficency);
 
-                flySpeed = Math.abs((rpm/Settings.powerEstimate.maxRPM)*Settings.powerEstimate.flyEfficency);
+                //flySpeed = Math.abs((rpm/Settings.powerEstimate.maxRPM)*Settings.powerEstimate.flyEfficency);
             }
         }
     } //Find distance and get needed power

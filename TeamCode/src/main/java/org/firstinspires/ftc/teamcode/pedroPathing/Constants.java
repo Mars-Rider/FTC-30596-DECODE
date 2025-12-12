@@ -19,8 +19,8 @@ public class Constants {
             .forwardZeroPowerAcceleration(-35.240358568070064)
             .lateralZeroPowerAcceleration(-118.72354583964098)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.05))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.05))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(1,0.0,0.01,0.6,0.1))
+            .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.01, 0.05))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(1,0.0,0,0.6,0.1))
             .centripetalScaling(0.005);//In KG
     ;//In KG
 
@@ -40,10 +40,10 @@ public class Constants {
             .rightRearMotorName("RRL")
             .leftRearMotorName("LRL")
             .leftFrontMotorName("LFB")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)//Strafe and
+            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)//Strafe and
             .xVelocity(46.553280373812115)
             .yVelocity(67.22709803171244);
 
@@ -60,7 +60,7 @@ public class Constants {
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                        RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                             RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             );
