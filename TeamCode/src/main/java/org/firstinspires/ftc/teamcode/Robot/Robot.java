@@ -44,8 +44,6 @@ public class Robot {
     public LEDController LEDs;
     public LEDChannel flyLEDs;
 
-    public boolean opMode = false; //True is auton
-
     public boolean sortOn = false;//True is sorting
 
     public boolean facingGoal = false; //If true, robot is facing the goal at all times and controls turn into global x and y, False is no more facing goal and it uses local driving
@@ -57,7 +55,7 @@ public class Robot {
     // public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     private boolean fly = false; //True = on
-    public double flySpeed = 65;
+    public double flySpeed = 70;
     //public double flySpeed = 0.65;
 
     public boolean incremented = false;
@@ -231,26 +229,49 @@ public class Robot {
     } //Turn on power if needed and spin rollers based on the color
 
     public void outtakeByCode() {
-        int totLoad = 0;
-        int totCode = 0;
-        for (int l = 0; l < Globals.loaded.length; l++) {
-            if(Globals.loaded[l] != 0) {totLoad += Globals.loaded[l];}
-            if(Globals.code[l] != 0) { totCode += Globals.code[l];}
-        }
 
-       //if(totLoad == totCode){
-            flyPower(true);
-            for (int color:Globals.code) {
-                sleep(5000);
-                outtake(color);
-
-                sleep(1250); //Wait 500ms then do the next one
-                outtake(0);
-            }
-            flyPower(false);
-        //}
+        outtakeByCode(Globals.code);
 
     } //Automatically shoots by the code
+
+    private void sleepForFly(){
+        while (Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed) > Globals.flyTolerance) {sleep(50);}
+
+        return;
+    }
+
+    enum State {CONTINUE, WAIT}
+    private boolean outtakeState = true;//false means its waiting
+
+    public void outtakeByCode(int[] code) {
+//        int totLoad = 0;
+//        int totCode = 0;
+//
+//        for (int l = 0; l < Globals.loaded.length; l++) {
+//            if(Globals.loaded[l] != 0) {totLoad += Globals.loaded[l];}
+//            if(code[l] != 0) { totCode += code[l];}
+//        }
+
+        //if(totLoad == totCode){
+        //}
+
+        //if(totLoad == totCode){
+        flyPower(true);
+        //waitForFly();
+        sleep(2500); //Change to wait until fly wheel is ready
+        for (int color:code) {
+            //waitForFly(); //before using, Disable all the sleeps in this function but the one between the outtake function calls
+            outtake(color);
+            sleep(1250); //Wait 500ms then do the next one
+            outtake(0);
+
+            sleep(1000); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
+        }
+        sleep(250);
+        flyPower(false);
+        //}
+
+    } //Automat
 
     //Intake
     public void intakePower() {
@@ -267,6 +288,7 @@ public class Robot {
             }
     } //Turn on and off power of intake based off of what the input is
 
+    int lastColor;
     public int closestColor() {
         HuskyLens.Block[] blocks = huskyLens.blocks();
         telemetry.addData("Block count", blocks.length);
@@ -299,7 +321,6 @@ public class Robot {
 
         return closestColor; //Return the color that comes
     } //Finds the closest color that is infront of the robot (Husky lens)
-
     public void autoSorting() {
         autoSorting(!sortOn);
     } //Turn on and off power of intake
@@ -311,15 +332,7 @@ public class Robot {
 
     public void sort() {
         if(sortOn){
-            intakePower(true);
-
-            int color = closestColor();
-
-            if(color == 1){ // purple
-                sort.setPosition(Settings.sortMid+Settings.sortInc);
-            }else if (color == 2){ //green
-                sort.setPosition(Settings.sortMid-Settings.sortInc);
-            }
+            sort(closestColor());
         } else {
             sort(0);
         }
@@ -346,9 +359,22 @@ public class Robot {
         llResult = limelight.getLatestResult();
     }
 
-    public void readFieldData() {
+    public void resetCode(){
+        Globals.code = new int[]{0,0,0};
+
+
+    }
+
+    public void readFieldData() {readFieldData(false);}
+
+    public void readFieldData(boolean reset) {
         int codeID = 0;
         int allianceID = 0;
+
+        if(reset){
+            Globals.code = new int[]{0,0,0};
+            Globals.alliance = 0;
+        }
 
         //Get data
         getLimelight();
@@ -360,6 +386,7 @@ public class Robot {
             telemetry.addData("Ta", llResult.getTa());
 
             for (int i = 0; i < llResult.getFiducialResults().size()-1; i++) {
+                telemetry.addData("Code Id", llResult.getFiducialResults().get(i).getFiducialId());
                 for (int h = 0; h < codeIDs.length; h++) {
                     if (codeIDs[h] == llResult.getFiducialResults().get(i).getFiducialId()) {
                         codeID = h;
@@ -373,6 +400,14 @@ public class Robot {
                             if(allianceID == 20){Globals.alliance = 2;} else if (allianceID== 24){Globals.alliance = 1;}//Set to opposite color than what it sees
                         }
                     }
+                }
+            }
+
+            if (Globals.alliance == 0){
+                if (botPose.getPosition().y < 0){
+                    Globals.alliance = 1; //Blue?
+                } else {
+                    Globals.alliance = 2; //Red?
                 }
             }
 
@@ -396,11 +431,11 @@ public class Robot {
 //            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
 //        }
 
-        if(opMode && botPose != null){
+        if(Globals.opMode && botPose != null){
             Globals.startPose = new Pose(
-                    botPose.getPosition().x,
-                    botPose.getPosition().y,
-                    botPose.getOrientation().getYaw(), FTCCoordinates.INSTANCE
+                    (botPose.getPosition().y + 1.8288) * 39.3701,//Switch depending on the thing
+                    (-botPose.getPosition().x + 1.8288) * 39.3701,
+                    Math.toRadians(botPose.getOrientation().getYaw()+90) //Adjust if the yaw is wrong
             );
         }
     } //Sets the code
@@ -499,11 +534,11 @@ public class Robot {
     }
 
     public void update(){
-        drivetrain.auxInputs[2] = drivetrain != null && facingGoal ? faceGoalPower() : 0;
+        //drivetrain.auxInputs[2] = drivetrain != null && facingGoal ? faceGoalPower() : 0;
 
-       double tolerance = 5; //DegreesSec
-        if(Math.abs(tFly.getVelocity(AngleUnit.RADIANS)-flySpeed) < tolerance && Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed) < tolerance){
+        if(Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed) < Globals.flyTolerance){
             //flyLEDs.setColor(Color.GREEN);
+            telemetry.addLine("Fly Wheel Ready");
         } else {
             //flyLEDs.setColor(Color.BLUE);
         }

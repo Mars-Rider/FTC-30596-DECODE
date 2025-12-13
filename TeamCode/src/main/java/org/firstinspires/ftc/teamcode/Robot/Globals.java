@@ -12,6 +12,9 @@ public class Globals {
 
     static public int[] loaded = {1, 1, 2}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
+    static public int flyTolerance = 5;
+
     static public Pose startPose;
-    static public Pose lastPose;
+
+    public static boolean opMode = false; //True is auton
 }

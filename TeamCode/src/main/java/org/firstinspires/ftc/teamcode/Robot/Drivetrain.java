@@ -29,7 +29,7 @@ public class Drivetrain {
     public static double[] auxInputs = {0, 0, 0};
 
     private Follower follower;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
+    public Pose startingPose; //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
