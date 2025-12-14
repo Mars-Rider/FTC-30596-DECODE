@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.Robot;
 
 import static android.os.SystemClock.sleep;
 
+import android.graphics.Color;
+
 import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
@@ -16,12 +18,16 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.SwitchableLight;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController;
-import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.Color;
 import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.LEDChannel;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -55,7 +61,7 @@ public class Robot {
     // public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     private boolean fly = false; //True = on
-    public double flySpeed = 70;
+    public double flySpeed = 67.5;
     //public double flySpeed = 0.65;
 
     public boolean incremented = false;
@@ -66,6 +72,14 @@ public class Robot {
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 1; //Speed of intake
     public int intakeDirection = 1;
+
+    public NormalizedColorSensor[] pColor = new NormalizedColorSensor[2];
+    public NormalizedColorSensor[] gColor = new NormalizedColorSensor[2];
+    private float gain = 2;
+    private final float[] hsvValues = new float[3];
+    private final int[] pDomain = {250,320};
+    private final int[] gDomain = {75,165};
+
 
     private HuskyLens huskyLens;
     private Limelight3A limelight;
@@ -85,10 +99,28 @@ public class Robot {
 
         //Rollers
         pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES        pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
-
         pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
         gRoll[0] = hardwareMap.get(CRServo.class, "gR1");//5 C
         gRoll[1] = hardwareMap.get(CRServo.class, "gR2");//0 C
+
+        //Color Sensors
+        pColor[0] = hardwareMap.get(NormalizedColorSensor.class, "pColor1");
+        pColor[1] = hardwareMap.get(NormalizedColorSensor.class, "pColor2");
+        gColor[0] = hardwareMap.get(NormalizedColorSensor.class, "gColor1");
+        gColor[1] = hardwareMap.get(NormalizedColorSensor.class, "gColor2");
+
+        for (NormalizedColorSensor colorSensor:
+                pColor) {
+            if (colorSensor instanceof SwitchableLight) {
+                ((SwitchableLight)colorSensor).enableLight(true);
+            }
+        }
+        for (NormalizedColorSensor colorSensor:
+                gColor) {
+            if (colorSensor instanceof SwitchableLight) {
+                ((SwitchableLight)colorSensor).enableLight(true);
+            }
+        }
 
         //Intake
         intake = hardwareMap.get(DcMotor.class, "intake");//3 E
@@ -118,7 +150,7 @@ public class Robot {
 
         tFly.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
-       intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         bFly.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         tFly.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
@@ -162,6 +194,44 @@ public class Robot {
     }
 
 
+
+    //Color sensors
+    public int color(NormalizedColorSensor colorSensor){
+        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+        Color.colorToHSV(colors.toColor(), hsvValues);
+
+        telemetry.addLine()
+                .addData("Hue", "%.3f", hsvValues[0]);
+
+        if(hsvValues[0] > pDomain[0] && hsvValues[0] < pDomain[1]){//Less than ??? means
+            return 1;
+        } else if (hsvValues[0] > gDomain[0] && hsvValues[0] < gDomain[1]){
+            return 2;
+        } else {
+            return 0;
+        }
+    }
+
+    public void waitForEnter(NormalizedColorSensor colorSensor){//Wait for color to leave the sensor
+        while (color(colorSensor) == 0){sleep(50);}
+    }
+
+    public void waitForLeave(NormalizedColorSensor colorSensor){//Wait for color to leave the sensor
+        while (color(colorSensor) != 0){sleep(50);}
+    }
+
+    public void load(int color){//Add a color to the load
+        for (int i = 0; i < 3; i++) {
+            if(Globals.loaded[i] == 0){Globals.loaded[i] = color; break;}
+        }
+    }
+
+    public void unLoad(int color){
+        for (int i = 2; i >= 0; i--) {//Make sure it doesnt go to index of 3
+            if(Globals.loaded[i] == color){Globals.loaded[i] = 0; break;}
+        }
+    }
+
     //Flywheels
     public void flyPower() {
         flyPower(!fly);
@@ -189,7 +259,7 @@ public class Robot {
         }
     } //Turn on and off power of flywheel based off of what the input is
 
-    private boolean pOut, gOut;
+    private boolean pOut = false, gOut = false;
     public void outtake(int color) {
             if(color == 1) { //Purple
                 if(!pOut){
@@ -228,20 +298,51 @@ public class Robot {
             }
     } //Turn on power if needed and spin rollers based on the color
 
+    public void setOuttake(int color, boolean state){
+        if(color == 1) { //Purple
+            if(state){
+                for (CRServo servo : pRoll) {
+                    servo.setPower(rollSpeed);
+                }
+                pOut = true;
+            } else {
+                for (CRServo servo : pRoll) {
+                    servo.setPower(0);
+                }
+                pOut = false;
+            }
+        } else if (color == 2) { // Green
+            if(state){
+                for (CRServo servo : gRoll) {
+                    servo.setPower(rollSpeed);
+                }
+                gOut = true;
+            } else {
+                for (CRServo servo : gRoll) {
+                    servo.setPower(0);
+                }
+                gOut = false;
+            }
+        }
+    }
+
     public void outtakeByCode() {
 
         outtakeByCode(Globals.code);
 
     } //Automatically shoots by the code
 
-    private void sleepForFly(){
-        while (Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed) > Globals.flyTolerance) {sleep(50);}
-
-        return;
+    public void sleepForFly(){
+        sleepForFly(0);
     }
 
-    enum State {CONTINUE, WAIT}
-    private boolean outtakeState = true;//false means its waiting
+    public void sleepForFly(double delay){
+        while (Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed+delay) > Globals.flyTolerance) {
+            sleep(50);
+            telemetry.addLine("Error: " + Math.abs(bFly.getVelocity(AngleUnit.RADIANS)-flySpeed));
+            telemetry.update();
+        }
+    }
 
     public void outtakeByCode(int[] code) {
 //        int totLoad = 0;
@@ -256,16 +357,22 @@ public class Robot {
         //}
 
         //if(totLoad == totCode){
-        flyPower(true);
-        //waitForFly();
-        sleep(2500); //Change to wait until fly wheel is ready
+        if(code[0] == 0){
+            code = new int[]{1,1,2};
+        }
+
+        if(!fly){
+            flyPower(true);
+            //waitForFly();
+            sleepForFly(-2.5);
+        }
         for (int color:code) {
             //waitForFly(); //before using, Disable all the sleeps in this function but the one between the outtake function calls
             outtake(color);
             sleep(1250); //Wait 500ms then do the next one
             outtake(0);
 
-            sleep(1000); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
+            sleepForFly(); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
         }
         sleep(250);
         flyPower(false);
@@ -321,10 +428,10 @@ public class Robot {
 
         return closestColor; //Return the color that comes
     } //Finds the closest color that is infront of the robot (Husky lens)
+
     public void autoSorting() {
         autoSorting(!sortOn);
     } //Turn on and off power of intake
-
     public void autoSorting(boolean manual) { //True is on, false is off
         sortOn = manual;
     } //Turn on and off power of intake based off of what the input is
@@ -337,7 +444,6 @@ public class Robot {
             sort(0);
         }
     }
-
     public void sort(int color) {
         if (color == 0){
             sort.setPosition(Settings.sortMid);
@@ -416,21 +522,6 @@ public class Robot {
             //allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
         }
 
-//        for (int i = 0; i < codeIDs.length; i++) {
-//            if (codeIDs[i] == codeID) {
-//                codeID = i;
-//                break;// return index when found
-//            }
-//        }
-
-//        if (Globals.code[0] == 0){
-//            Globals.code = codes[codeID];
-//        }
-//
-//        if(Globals.alliance == 0){
-//            if(allianceID == 20){Globals.alliance = 1;} else if (allianceID== 24){Globals.alliance = 2;}
-//        }
-
         if(Globals.opMode && botPose != null){
             Globals.startPose = new Pose(
                     (botPose.getPosition().y + 1.8288) * 39.3701,//Switch depending on the thing
@@ -441,27 +532,28 @@ public class Robot {
     } //Sets the code
 
     public void faceGoal(){
-        faceGoal(!facingGoal);
-    }
-
-    public void faceGoal(boolean manual){
-        facingGoal = manual;
+        drivetrain.runTo(faceGoalError(false));
     }
 
     public double faceGoalError(){
-        return faceGoalError(true);
+        return faceGoalError(false);
     }
 
+    boolean headingSwap = false;
+
     public double faceGoalError(boolean robotCentric){
-        getLimelight();
         //use pedro to find if the lime light can see it
         Pose goalPose = (Globals.alliance == 1) ? new Pose(16,130) : new Pose(128,130);
-        error = Math.atan2(goalPose.getY()-drivetrain.getPosition().getY(),goalPose.getX()-drivetrain.getPosition().getX()) - drivetrain.getHeading();
+        error = (Math.atan2(goalPose.getY()-drivetrain.getPosition().getY(),goalPose.getX()-drivetrain.getPosition().getX())-Math.toRadians(180)) - (drivetrain.getHeading());
+        error = error % (2*Math.PI);//Make it normalized
 
-        if(Math.toDegrees(error) < 55){ //If it not greater than limelight field of view
+        telemetry.addLine("Pedro Error: " + Math.toDegrees(-error));
 
+        if(Math.abs(Math.toDegrees(error)) <= 30){ //If it not greater than limelight field of view
+
+            getLimelight();
             Pose3D botPose = null;
-            if(llResult != null && llResult.isValid() && facingGoal){
+            if(llResult != null && llResult.isValid()){
                 for (LLResultTypes.FiducialResult fiducial:llResult.getFiducialResults()) {
                     if (fiducial.getFiducialId() != codeIDs[0] && fiducial.getFiducialId() != codeIDs[1] && fiducial.getFiducialId() != codeIDs[2]) {
                         botPose = fiducial.getTargetPoseRobotSpace();
@@ -469,22 +561,24 @@ public class Robot {
                 }
 
                 if(botPose != null){//April tag for tracking is nonexistent or not in camera
-                    error = Math.atan2(botPose.getPosition().z,botPose.getPosition().x);
+                    error = error % (2*Math.PI);//Make it normalized
+                    telemetry.addLine("Limelight Error: " + Math.toDegrees(-error));
+                } else {
+                    telemetry.addLine("Using limelight, no tag");
                 }
+            } else {
+                telemetry.addLine("Using limelight, no result");
+                //Robot is either facing the wrong way or too far from limelight
+                //return faceGoalError();
             }
         }
 
-        telemetry.addLine("Goal Controller Error: " + Math.toDegrees(error));
+
+        telemetry.addLine("Goal Error: " + Math.toDegrees(-error));
 
         if(Math.abs(Math.toDegrees(error)) < Settings.goalDeadzone) {error = 0;}
 
-        return robotCentric ? error: error+drivetrain.getHeading();
-    }
-
-    public double faceGoalPower() {
-        if (Math.abs(faceGoalError()) <=.5){faceGoal(false); return 0;} else {
-            return Math.min(1,Settings.goalKp * faceGoalError());
-        }
+        return robotCentric ? -error : error + drivetrain.getHeading();
     }
 
     public void estimatePower() {
@@ -505,21 +599,18 @@ public class Robot {
                 telemetry.addData("Tz", botPose.getPosition().z);
                 telemetry.addData("Ta", llResult.getTa());
 
-                double distance = Math.sqrt(Math.pow((botPose.getPosition().x*39.3701) + Settings.powerEstimate.targetXOffset, 2) + Math.pow((botPose.getPosition().z*39.3701) + Settings.powerEstimate.targetXOffset, 2));//The number added to z is the height the april tag is below the top of the opening in mm i think
+                double distance = (botPose.getPosition().z*39.3701) + Settings.powerEstimate.targetXOffset;//The number added to z is the height the april tag is below the top of the opening in mm i think
 
                 double g = 386.09;
-                double velocity = Math.sqrt((g*Math.pow(distance-Settings.powerEstimate.flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(Settings.powerEstimate.flyAngle)),2)*(((distance-Settings.powerEstimate.flyXOffset)*Math.tan(Math.toRadians(Settings.powerEstimate.flyAngle)))-((botPose.getPosition().y*39.3701)-Settings.powerEstimate.flyYOffset))));
-                double angularVelocity = (velocity)/(Settings.powerEstimate.flywheelDiameter/2);//Gets it in radians
+                double velocity = Math.sqrt((g*Math.pow(distance-Settings.powerEstimate.flyXOffset,2))/(2*Math.pow(Math.cos(Math.toRadians(Settings.powerEstimate.flyAngle)),2)*((((distance-Settings.powerEstimate.flyXOffset)*Math.tan(Math.toRadians(Settings.powerEstimate.flyAngle))))-((botPose.getPosition().y*39.3701)+Settings.powerEstimate.targetYOffset-Settings.powerEstimate.flyYOffset))));
+                double angularVelocity = (velocity)/(Settings.powerEstimate.flywheelDiameter/2);//Gets it in radians/sec
                 double rpm = (60*velocity)/(Settings.powerEstimate.flywheelDiameter*Math.toRadians(180));
 
-                flySpeed = Math.abs((angularVelocity/(2*Math.PI))*Settings.powerEstimate.flyEfficency);
-
-                //flySpeed = Math.abs((rpm/Settings.powerEstimate.maxRPM)*Settings.powerEstimate.flyEfficency);
+                flySpeed = Math.abs((angularVelocity)*(1/Settings.powerEstimate.flyEfficency))*Settings.powerEstimate.flyOverEstimate;
             }
         }
     } //Find distance and get needed power
 
-    //Face goal PID (HELL)
 
     public void startDrivetrain(){
         drivetrain = new Drivetrain(map,telemetry);
@@ -545,4 +636,12 @@ public class Robot {
 
         drivetrain.update();
     } //Put things to do in the loop here
+
+    public static double changeAlliance(double input){
+        if(Globals.alliance == 2){
+            return (140-input);
+        } else {
+            return input;
+        }
+    }
 }

@@ -15,6 +15,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import org.firstinspires.ftc.teamcode.Robot.Robot;
+
 import java.util.function.Supplier;
 
 public class Drivetrain {
@@ -22,8 +24,8 @@ public class Drivetrain {
     public Telemetry telemetry;
 
     public DcMotor LRL, LFB, RRL, RFB;
-    public static double driveSpeed = 0.5; //Default speed of drivetrain
-    public static double driveSpeedSlow = 0.1; //Speed of drivetrain when in slow mode
+    public static double driveSpeed = 1; //Default speed of drivetrain
+    public static double driveSpeedSlow = 0.5; //Speed of drivetrain when in slow mode
     public static boolean slowMode = false;
 
     public static double[] auxInputs = {0, 0, 0};
@@ -39,7 +41,12 @@ public class Drivetrain {
         if(pedro){
             pedroDriving = true;
             follower = Constants.createFollower(map);
-            follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+            startingPose = Globals.startPose;
+            telemetry.addLine("Starting Heading: " + startingPose.getHeading());
+            /*if (Globals.finishedAuto == true) {
+                startingPose = startingPose.setHeading(-180);
+            }*/
+            follower.setStartingPose(startingPose == null ? new Pose(Robot.changeAlliance(28),10,Math.toRadians(-90)) : startingPose);
             follower.update();
             telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         } else {
@@ -88,6 +95,7 @@ public class Drivetrain {
                 .build();
 
         follower.followPath(pathChain.get());
+        automatedDrive = true;
     }
 
     public void runTo(Pose pose, double endHeading){
@@ -95,21 +103,25 @@ public class Drivetrain {
 
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, pose)))
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(endHeading), 0.8))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, pose.getHeading(), 0.8))
                 .build();
 
         follower.followPath(pathChain.get());
+        automatedDrive = true;
     }
 
     public void runTo(double endHeading){
         if(!pedroDriving){return;}
 
+        Pose pose = new Pose(follower.getPose().getX() + 0.1,follower.getPose().getY() + 0.1,endHeading);
+
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(follower::getPose, follower.getPose())))
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(endHeading), 0.8))
+                .addPath(new Path(new BezierLine(follower::getPose, pose)))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, pose.getHeading(), 0.8))
                 .build();
 
         follower.followPath(pathChain.get());
+        automatedDrive = true;
     }
 
     public Pose getPosition(){
@@ -133,6 +145,21 @@ public class Drivetrain {
         if(pedroDriving){
             follower.update();
             telemetryM.update();
+            telemetryM.debug("position", follower.getPose());
+            telemetryM.debug("velocity", follower.getVelocity());
+            telemetryM.debug("automatedDrive", automatedDrive);
+
+            if (automatedDrive && (!follower.isBusy())) {
+                follower.startTeleopDrive(true);
+                automatedDrive = false;
+            }
+        }
+    }
+
+    public void begin(){
+
+        if(pedroDriving){
+            follower.startTeleopDrive(true);
         }
     }
 
@@ -150,12 +177,17 @@ public class Drivetrain {
         r += auxInputs[2];
 
         if(pedroDriving){
-            follower.setTeleOpDrive(
-                    y  * (slowMode ? driveSpeedSlow : driveSpeed),
-                    x  * (slowMode ? driveSpeedSlow : driveSpeed),
-                    r  * (slowMode ? driveSpeedSlow : driveSpeed),
-                    robotCentric // Robot Centric
-            );
+            if (!automatedDrive) {
+                follower.setTeleOpDrive(
+                        -y  * (slowMode ? driveSpeedSlow : driveSpeed),
+                        -x  * (slowMode ? driveSpeedSlow : driveSpeed),
+                        -r  * (slowMode ? driveSpeedSlow : driveSpeed),
+                        robotCentric // Robot Centric
+                );
+            } else if(Math.abs(x) > 0.05 || Math.abs(y) > 0.05 || Math.abs(r) > 0.05){
+                automatedDrive = false;
+                follower.startTeleopDrive(true);
+            }
         } else {
             double[] wheelPowers = {0,0,0,0}; //Fr, fl, br, bl
 

@@ -71,11 +71,11 @@ public class ThreeBall extends OpMode {
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    int[] code = {1,2,1};
-                    robot.outtakeByCode(Globals.code);//delete code to m
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(-1);
                 }
+
+                Globals.finishedAuto = true;
 
                 break;
         }
@@ -103,10 +103,11 @@ public class ThreeBall extends OpMode {
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading()-90);//Change the heading by idk (180 or 90)
+        telemetry.addData("heading", follower.getPose().getHeading());//Change the heading by idk (180 or 90)
         telemetry.update();
 
-        //Globals.startPose = follower.getPose();
+        Globals.startPose = follower.getPose();
+        Globals.startPose = Globals.startPose.setHeading(follower.getHeading());
     }
 
     /**
@@ -123,9 +124,10 @@ public class ThreeBall extends OpMode {
 
         robot.readFieldData(true);
         startPose = Globals.startPose;
+        Globals.finishedAuto = false;
 
-        scorePose = new Pose(changeAlliance(40), 85, Globals.alliance == 1 ? Math.toRadians(-45) : Math.toRadians(-135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-        pickup1Pose = new Pose(changeAlliance(30), 60, Globals.alliance == 1 ? Math.toRadians(-180) : Math.toRadians(0));
+        scorePose = new Pose(robot.changeAlliance(40), 89, Globals.alliance == 1 ? Math.toRadians(-45) : Math.toRadians(-135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+        pickup1Pose = new Pose(robot.changeAlliance(35), 60, Globals.alliance == 1 ? Math.toRadians(-180) : Math.toRadians(0));
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
@@ -147,6 +149,8 @@ public class ThreeBall extends OpMode {
     public void start() {
         opmodeTimer.resetTimer();
         setPathState(0);
+
+        robot.readFieldData(true);
     }
 
     /**
@@ -155,13 +159,4 @@ public class ThreeBall extends OpMode {
     @Override
     public void stop() {
     }
-
-    public double changeAlliance(double input){
-        if(Globals.alliance == 2){
-            return (140-input);
-        } else {
-            return input;
-        }
-    }
-
 }

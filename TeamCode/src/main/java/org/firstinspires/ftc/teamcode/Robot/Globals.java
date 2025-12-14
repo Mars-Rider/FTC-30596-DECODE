@@ -14,7 +14,9 @@ public class Globals {
 
     static public int flyTolerance = 5;
 
-    static public Pose startPose;
+    static public boolean finishedAuto = false;
+
+    static public Pose startPose = null;
 
     public static boolean opMode = false; //True is auton
 }

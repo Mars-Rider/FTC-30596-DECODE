@@ -37,7 +37,7 @@ public class SampleTeleOp extends OpMode {
     public void init() {
         robot = new Robot(hardwareMap,telemetry);
 
-        startingPose = Globals.startPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE);
+        startingPose = Globals.startPose;
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);

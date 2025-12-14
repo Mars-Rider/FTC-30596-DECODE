@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Robot.Robot;
 
-@TeleOp(name = "FieldData", group = "Tests")
+@TeleOp(name = "Sorting", group = "Tests")
 public class Sorting extends LinearOpMode{
 
     @Override

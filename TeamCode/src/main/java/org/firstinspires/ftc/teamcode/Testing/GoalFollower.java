@@ -12,7 +12,6 @@ public class GoalFollower extends LinearOpMode{
     public void runOpMode() throws InterruptedException {
         //Run at Initialization
         Robot robot = new Robot(hardwareMap, telemetry);
-        robot.faceGoal(true);
 
         waitForStart();
         //On Start

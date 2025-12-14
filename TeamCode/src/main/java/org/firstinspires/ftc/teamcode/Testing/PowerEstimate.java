@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Robot.Robot;
 
-@TeleOp(name = "FieldData", group = "Tests")
+@TeleOp(name = "Power Estimate", group = "Tests")
 public class PowerEstimate extends LinearOpMode{
 
     @Override
@@ -28,7 +28,7 @@ public class PowerEstimate extends LinearOpMode{
             if(gamepad1.bWasReleased()){robot.outtake(0);}
 
             //robot.flyPower(true);
-            robot.flyPower(true);
+            //robot.flyPower(true);
             telemetry.addLine("Power: " + robot.flySpeed);
             telemetry.update();
         }

@@ -14,7 +14,8 @@ public class Settings {
         public static double flyYOffset = 12;
         public static double targetXOffset = 6;
         public static double targetYOffset = 6;
-        public static double flyEfficency = 0.5;
+        public static double flyEfficency = 1;
+        public static double flyOverEstimate = 0.625;
         public static double flyAngle = 55;
         public static double maxRPM = 6000;
         public static double flywheelDiameter = 2.5;
@@ -22,4 +23,11 @@ public class Settings {
 
     public static double goalKp = 0;
     public static double goalDeadzone = 0.5;
+
+    public static class FlyWheel {
+        public static double kP = 10;
+        public static double kI = 0;
+        public static double kD = 0;
+        public static double kF = 12.5;
+    }
 }
