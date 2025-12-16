@@ -76,10 +76,10 @@ public class Robot {
     public NormalizedColorSensor[] pColor = new NormalizedColorSensor[2];
     public NormalizedColorSensor[] gColor = new NormalizedColorSensor[2];
     private float gain = 2;
+    private int[] currColor = {0,0,0,0};
     private final float[] hsvValues = new float[3];
     private final int[] pDomain = {250,320};
     private final int[] gDomain = {75,165};
-
 
     private HuskyLens huskyLens;
     private Limelight3A limelight;
@@ -204,10 +204,13 @@ public class Robot {
                 .addData("Hue", "%.3f", hsvValues[0]);
 
         if(hsvValues[0] > pDomain[0] && hsvValues[0] < pDomain[1]){//Less than ??? means
+            currColor[identifySensor(colorSensor)] = 1;
             return 1;
         } else if (hsvValues[0] > gDomain[0] && hsvValues[0] < gDomain[1]){
+            currColor[identifySensor(colorSensor)] = 2;
             return 2;
         } else {
+            currColor[identifySensor(colorSensor)] = 0;
             return 0;
         }
     }
@@ -220,6 +223,65 @@ public class Robot {
         while (color(colorSensor) != 0){sleep(50);}
     }
 
+    public int identifySensor(NormalizedColorSensor colorSensor){
+        if(colorSensor == pColor[0]){
+            return 0;
+        } else if(colorSensor == pColor[1]){
+            return 1;
+        }else if(colorSensor == gColor[0]){
+            return 2;
+        }else if(colorSensor == gColor[1]){
+            return 3;
+        } else {
+            return -1;
+        }
+    }
+
+    public boolean checkForEnter(NormalizedColorSensor colorSensor){//Wait for color to leave the sensor
+        int[] pastColors = currColor;
+
+        return color(colorSensor) != 0 && pastColors[identifySensor(colorSensor)] == 0;
+    }
+
+    public boolean checkForLeave(NormalizedColorSensor colorSensor){//Wait for color to leave the sensor
+        int[] pastColors = currColor;
+        return color(colorSensor) == 0  && pastColors[identifySensor(colorSensor)] != 0;
+    }
+
+    public boolean checkForEnterChannel(int color){//Wait for color to leave the sensor
+        int[] pastColors = currColor;
+
+        if (color == 1){
+            if (color(pColor[1]) != 0 && pastColors[1] == 0){
+                load(1);
+                return true;
+            }
+        } else if (color == 2){
+            if (color(gColor[1]) != 0 && pastColors[3] == 0){
+                load(2);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean checkForLeaveChannel(int color){//Wait for color to leave the sensor
+        int[] pastColors = currColor;
+
+        if (color == 1 && checkForColor(1)){//Right color and there are colors loaded
+            if (color(pColor[1]) == 0 && pastColors[1] != 0){
+                unLoad(1);
+                return true;
+            }
+        } else if (color == 2 && checkForColor(2)){
+            if (color(gColor[1]) == 0 && pastColors[3] != 0){
+                unLoad(2);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void load(int color){//Add a color to the load
         for (int i = 0; i < 3; i++) {
             if(Globals.loaded[i] == 0){Globals.loaded[i] = color; break;}
@@ -230,6 +292,14 @@ public class Robot {
         for (int i = 2; i >= 0; i--) {//Make sure it doesnt go to index of 3
             if(Globals.loaded[i] == color){Globals.loaded[i] = 0; break;}
         }
+    }
+
+    public boolean checkForColor(int color){
+        for (int i = 2; i >= 0; i--) {//Make sure it doesnt go to index of 3
+            if(Globals.loaded[i] == color){return true;}
+        }
+
+        return false;
     }
 
     //Flywheels
@@ -260,9 +330,36 @@ public class Robot {
     } //Turn on and off power of flywheel based off of what the input is
 
     private boolean pOut = false, gOut = false;
+
     public void outtake(int color) {
+        if(color == 1) { //Purple
+            if(!pOut){
+                outtake(1, true);
+            } else {
+                outtake(1, false);
+            }
+        } else if (color == 2) { // Green
+            if(!gOut){
+                outtake(2, true);
+            } else {
+                outtake(2, false);
+            }
+        } else if (color == 0) { // Turn off
+            for (CRServo servo : pRoll) {
+                servo.setPower(0);
+            }
+            for (CRServo servo : gRoll) {
+                servo.setPower(0);
+            }
+
+            pOut = false;
+            gOut = false;
+        }
+    } //Turn on power if needed and spin rollers based on the color
+
+    public void outtake(int color, boolean manual) {
             if(color == 1) { //Purple
-                if(!pOut){
+                if(manual){
                     for (CRServo servo : pRoll) {
                         servo.setPower(rollSpeed);
                     }
@@ -274,7 +371,7 @@ public class Robot {
                     pOut = false;
                 }
             } else if (color == 2) { // Green
-                if(!gOut){
+                if(manual){
                     for (CRServo servo : gRoll) {
                         servo.setPower(rollSpeed);
                     }
@@ -332,6 +429,59 @@ public class Robot {
 
     } //Automatically shoots by the code
 
+    public void storePurple(){ //Smartly use the outtake to put the colors into the thing - will run almost for ever
+            if((checkForEnterChannel(1) && color(pColor[1]) == 0)) {//Roll it if a color is entered and fly color sensor has nothing in front of it and there is now two
+                outtake(1, true);
+            } else if (color(pColor[1]) != 0 || (numOf(1) == 1 && color(pColor[0]) == 0)){ //Stop if there is one at the flywheel or if there is only one ball and the front isn't blocked
+                outtake(1, false);
+            }
+    }
+
+    public void storeGreen(){ //Smartly use the outtake to put the colors into the thing - will run almost for ever
+            if(checkForEnterChannel(2) && color(gColor[1]) == 0){
+                outtake(2, true);
+            } else if (color(gColor[1]) != 0){
+                outtake(2, false);
+            }
+    }
+
+    public void setNext(){
+        setNext(0);
+    } //Make sure that the balls in each channel are ready to shoot
+
+    public void setNext(int color){
+        if ((color(pColor[1]) != 0 && color != 1) || !checkFor(1)){//If the sensor has a ball in front and the current color being excluded isn't purple or if there isn't that color loaded
+            outtake(1, false);
+        } else if (color == 0){
+            outtake(1, true); //If none of those, that means outtake should be on
+        }
+        if ((color(gColor[1]) != 0 && color != 2) || !checkFor(2)){//If the sensor
+            outtake(2, false);
+        } else if(color == 0) {
+            outtake(2, true); //If none of those, that means outtake should be on
+        }
+    }
+
+    public boolean checkFor(int color){
+        for (int loadedColor:
+             Globals.loaded) {
+            if(loadedColor == color){return true;}
+        }
+
+        return false;
+    }
+
+    public int numOf(int color){
+        int count = 0;
+
+        for (int loadedColor:
+                Globals.loaded) {
+            if(loadedColor == color){count += 1;}
+        }
+
+        return count;
+    }
+
     public void sleepForFly(){
         sleepForFly(0);
     }
@@ -345,18 +495,7 @@ public class Robot {
     }
 
     public void outtakeByCode(int[] code) {
-//        int totLoad = 0;
-//        int totCode = 0;
-//
-//        for (int l = 0; l < Globals.loaded.length; l++) {
-//            if(Globals.loaded[l] != 0) {totLoad += Globals.loaded[l];}
-//            if(code[l] != 0) { totCode += code[l];}
-//        }
-
-        //if(totLoad == totCode){
-        //}
-
-        //if(totLoad == totCode){
+        outtake(0);//turn off the outtakes
         if(code[0] == 0){
             code = new int[]{1,1,2};
         }
@@ -366,18 +505,33 @@ public class Robot {
             //waitForFly();
             sleepForFly(-2.5);
         }
+
         for (int color:code) {
             //waitForFly(); //before using, Disable all the sleeps in this function but the one between the outtake function calls
-            outtake(color);
-            sleep(1250); //Wait 500ms then do the next one
-            outtake(0);
+            outtake(color, true);
+
+            NormalizedColorSensor sensor = null;
+            if(color == 1){
+                sensor = pColor[1];
+            } else {
+                sensor = gColor[1];
+            }
+
+            while((color(sensor) == 0 && checkFor(color))){//Wait for the fly sensor to detect a ball when there is aball
+                setNext(color);
+                sleep(50);
+            } //wait for sensor to enter the color sensor field if it is loaded
+
+            while(!checkForLeaveChannel(color)){//Wait for current ball to leave the outtake
+                setNext(color);
+                sleep(50);
+            }
+            outtake(color, false);
 
             sleepForFly(); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
         }
-        sleep(250);
+        sleep(150);
         flyPower(false);
-        //}
-
     } //Automat
 
     //Intake

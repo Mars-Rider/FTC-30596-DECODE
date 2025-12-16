@@ -1,119 +1,235 @@
 #include <Wire.h>
 #include <FastLED.h>
 
-#define MAX_STRIPS 6
-#define MAX_LEDS 1000
+// ---------------- CONFIG ----------------
+#define MAX_CHANNELS 5
+#define LEDS_PER_CHANNEL 60 // default, can be updated from packet
+#define DATA_PIN 5          // WS2812B data pin
+#define I2C_ADDR 0x08
 
-const int ledPins[MAX_STRIPS] = {D1,D2,D3,D4,D5,D6};
-const byte I2C_ADDRESS = 0x08;
-
-enum Pattern { RAINBOW=1, BLINK, SCANNER, SOLID, BREATHE };
-
+// ---------------- DATA STRUCTURES ----------------
 struct LEDChannel {
-    CRGB* leds;
-    byte r,g,b;
-    byte brightness;
-    byte pattern;
-    byte lastR,lastG,lastB,lastBrightness,lastPattern;
-    int numLEDs;
-    unsigned long lastUpdate;
-    int scannerPos;
-    bool blinkState;
+    int pin = 0;
+
+    int numLEDs = LEDS_PER_CHANNEL;
+    int brightness = 255;
+    int pattern = 3; // SOLID default
+    int trailLength = 4;
+    int radarCenter = numLEDs / 2;
+    // radarTrail = 3;
+    int twinkleHueMin = 0;
+    int twinkleHueMax = 255;
+    bool gradientMoving = false;
+    int period = 500;
+    int position = 0;
+    bool direction = true;
+    unsigned long lastUpdate = millis();
+    CHSV* leds = new CHSV[LEDS_PER_CHANNEL];
 };
 
-LEDChannel strips[MAX_STRIPS];
-int numStrips = MAX_STRIPS;
+// ---------------- CHANNELS ----------------
+LEDChannel channels[MAX_CHANNELS];
+int numChannels = 0;
 
-void setup(){
-    Wire.begin(I2C_ADDRESS);
-    Wire.onReceive(receiveEvent);
+// ---------------- FUNCTION DECLARATIONS ----------------
+void applyPattern(LEDChannel &ch);
+void updateLEDs();
+void i2cReceiveEvent(int bytesReceived);
 
-    for(int i=0;i<numStrips;i++){
-        strips[i].numLEDs = 30; // default length, can set via FTC
-        strips[i].leds = new CRGB[strips[i].numLEDs];
-        strips[i].brightness = 255;
-        strips[i].lastPattern = 0xFF;
-        strips[i].lastUpdate = millis();
-        strips[i].scannerPos = 0;
-        strips[i].blinkState = false;
-        FastLED.addLeds<WS2812, ledPins[i], GRB>(strips[i].leds, strips[i].numLEDs);
+// ---------------- SETUP ----------------
+void setup() {
+    Wire.begin(I2C_ADDR);
+    Wire.onReceive(i2cReceiveEvent);
+
+    channels[0].pin = 0;
+    channels[1].pin = 1;
+    channels[2].pin = 2;
+    channels[3].pin = 3;
+    channels[4].pin = 4;
+
+    // Initialize channels (up to MAX_CHANNELS)
+    for (int i = 0; i < MAX_CHANNELS; i++) {
+        FastLED.addLeds<WS2812, channels[i].pin, GRB>(channels[i].leds, channels[i].numLEDs);
     }
-    FastLED.clear(); FastLED.show();
 }
 
-void receiveEvent(int bytes){
-    if(bytes<1) return;
-    byte index = Wire.read();
-    if(index>=numStrips) return;
-    if(Wire.available()<6) return;
-
-    byte high = Wire.read();
-    byte low = Wire.read();
-    int numLEDs = ((int)high << 8) | (int)low;
-    byte r = Wire.read();
-    byte g = Wire.read();
-    byte b = Wire.read();
-    byte brightness = Wire.read();
-    byte pattern = Wire.read();
-
-    LEDChannel &strip = strips[index];
-
-    if(strip.numLEDs != numLEDs){
-        delete[] strip.leds;
-        strip.numLEDs = numLEDs;
-        strip.leds = new CRGB[numLEDs];
-        FastLED.addLeds<WS2812, ledPins[index], GRB>(strip.leds,numLEDs);
-    }
-
-    // Only update if changed
-    if(r!=strip.lastR || g!=strip.lastG || b!=strip.lastB ||
-       brightness!=strip.lastBrightness || pattern!=strip.lastPattern){
-        strip.r = r; strip.g = g; strip.b = b;
-        strip.brightness = brightness; strip.pattern = pattern;
-        strip.lastUpdate = millis();
-    }
-    strip.lastR = r; strip.lastG = g; strip.lastB = b;
-    strip.lastBrightness = brightness; strip.lastPattern = pattern;
+// ---------------- LOOP ----------------
+void loop() {
+    updateLEDs();
+    FastLED.show();
 }
 
-void applySolid(LEDChannel &strip){
-    for(int i=0;i<strip.numLEDs;i++)
-        strip.leds[i] = CRGB(scale8(strip.r,strip.brightness),
-                             scale8(strip.g,strip.brightness),
-                             scale8(strip.b,strip.brightness));
-}
-
-void loop(){
+// ---------------- UPDATE PATTERNS ----------------
+void updateLEDs() {
     unsigned long now = millis();
-    for(int i=0;i<numStrips;i++){
-        LEDChannel &strip = strips[i];
-        switch(strip.pattern){
-            case SOLID: applySolid(strip); break;
-            case RAINBOW:
-                for(int j=0;j<strip.numLEDs;j++)
-                    strip.leds[j] = CHSV((j*8 + now/10)%255, 255, strip.brightness);
-                break;
-            case BLINK:
-                if(now - strip.lastUpdate >= 500){ strip.blinkState = !strip.blinkState; strip.lastUpdate = now; }
-                for(int j=0;j<strip.numLEDs;j++)
-                    strip.leds[j] = strip.blinkState ? CRGB(strip.r,strip.g,strip.b) : CRGB::Black;
-                break;
-            case SCANNER:
-                if(now - strip.lastUpdate >= 50){ strip.scannerPos = (strip.scannerPos+1)%strip.numLEDs; strip.lastUpdate = now; }
-                for(int j=0;j<strip.numLEDs;j++)
-                    strip.leds[j] = (j==strip.scannerPos)?CRGB(strip.r,strip.g,strip.b):CRGB::Black;
-                break;
-            case BREATHE:
-            {
-                float f = (sin(now/500.0*3.14159)+1)/2;
-                for(int j=0;j<strip.numLEDs;j++)
-                    strip.leds[j] = CRGB(scale8(strip.r,(int)(strip.brightness*f)),
-                                         scale8(strip.g,(int)(strip.brightness*f)),
-                                         scale8(strip.b,(int)(strip.brightness*f)));
-            }
-                break;
+    for (int ch = 0; ch < numChannels; ch++) {
+        LEDChannel &c = channels[ch];
+        if (now - c.lastUpdate >= c.period) {
+            applyPattern(c);
+            c.lastUpdate = now;
+        }
+
+        for (int i = 0; i < c.numLEDs; i++)
+        {
+            c[i].nscale8_video((c.brightness/100)*255); // 128 is ~50% brightness
         }
     }
-    FastLED.show();
-    delay(10);
 }
+
+// ---------------- APPLY PATTERN ----------------
+void applyPattern(LEDChannel &ch) {
+    switch (ch.pattern) {
+        case 1: // BLINK
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = (ch.position % 2 == 0) ? ch.leds[i]  : CHSV::Black;
+            ch.position++;
+            break;
+
+        case 2: // LARSON / SCANNER
+                // Fade all LEDs to create a trailing effect
+            for (int i = 0; i < ch.numLEDs; i++)
+            {
+                leds[i].fadeToBlackBy(ch.trailLength); // adjust for longer/shorter trail
+            }
+
+            // Light the current position
+            ch.leds[pos] = ch.leds[pos];
+
+            FastLED.show();
+            delay(30); // adjust speed
+
+            // Move to next LED
+            pos++;
+
+            // Reset to start when reaching the end
+            if (pos >= NUM_LEDS)
+            {
+                pos = 0;
+            }
+            break;
+
+        case 3: // SOLID
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CHSV(ch.twinkleHueMin, 255, ch.brightness);
+            break;
+
+        case 4: // BREATHE
+        {
+            int val = (sin(millis() * 2.0 * PI / ch.period) + 1.0) * 0.5 * ch.brightness;
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CHSV(ch.twinkleHueMin, 255, val);
+        }
+            break;
+
+        case 5: // GRADIENT_STATIC
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CHSV(map(i, 0, ch.numLEDs - 1, ch.twinkleHueMin, ch.twinkleHueMax), 255, ch.brightness);
+            break;
+
+        case 6: // GRADIENT_MOVING
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CHSV(map((i + ch.position) % ch.numLEDs, 0, ch.numLEDs - 1, ch.twinkleHueMin, ch.twinkleHueMax), 255, ch.brightness);
+            ch.position = (ch.position + 1) % ch.numLEDs;
+            break;
+
+        case 7: // PINGPONG
+            // First, fade all LEDs to create the trailing effect
+            for (int i = 0; i < NUM_LEDS; i++)
+            {
+                leds[i].fadeToBlackBy(50); // Adjust 50 for faster/slower fading
+            }
+
+            // Light the current position
+            leds[pos] = COLOR;
+
+            // Move the scanner
+            pos += direction;
+
+            // Reverse at the ends
+            if (pos <= 0 || pos >= NUM_LEDS - 1)
+            {
+                direction = -direction;
+            }
+
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = (abs(i - ch.position) < ch.trailLength) ? CHSV(ch.twinkleHueMin, 255, ch.brightness) : CRGB::Black;
+            ch.position += ch.trailLength;
+            if (ch.position >= ch.numLEDs) ch.position = 0;
+            break;
+
+        case 8: // FLICKER
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CHSV(random(ch.twinkleHueMin, ch.twinkleHueMax), 255, random(ch.brightness / 2, ch.brightness));
+            break;
+
+        case 9: // HEARTBEAT
+        {
+            float t = sin(millis() * 2.0 * PI / ch.period);
+            int val = (t * t) * ch.brightness; // squared sine
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CHSV(ch.twinkleHueMin, 255, val);
+        }
+            break;
+
+        case 10: // RADAR
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = (i >= ch.radarCenter - ch.trailLength && i <= ch.radarCenter + ch.trailLength) ? CHSV(ch.twinkleHueMin, 255, ch.brightness) : CRGB::Black;
+            ch.radarCenter = (ch.radarCenter + 1) % ch.numLEDs;
+            break;
+
+        default:
+            for (int i = 0; i < ch.numLEDs; i++)
+                ch.leds[i] = CRGB::Black;
+            break;
+    }
+}
+
+void i2cReceiveEvent(int bytesReceived) {
+    while (Wire.available() >= 17) { // each packet is 17 bytes
+        uint8_t data[17];
+        for (int i = 0; i < 17; i++) {
+            data[i] = Wire.read();
+        }
+
+        int chIndex = data[0];
+        if (chIndex < 0 || chIndex >= MAX_CHANNELS) continue;
+
+        LEDChannel &ch = channels[chIndex];
+
+        // Number of LEDs
+        ch.numLEDs = ((int)data[1] << 8) | data[2];
+        if (ch.numLEDs > LEDS_PER_CHANNEL) ch.numLEDs = LEDS_PER_CHANNEL;
+
+        // Base color (already computed if VALUE)
+        uint8_t h = data[3];
+        uint8_t s = data[4];
+        uint8_t v = data[5];
+
+        // Set all LEDs to the base color (SOLID fallback)
+        for (int i = 0; i < ch.numLEDs; i++) {
+            ch.leds[i] = CHSV(h, s, v);
+        }
+
+        // Brightness
+        ch.brightness = data[6];
+
+        // Pattern
+        ch.pattern = data[7];
+
+        // Pattern parameters
+        ch.trailLength = data[8];
+        ch.radarCenter = ((int)data[9] << 8) | data[10];
+        //ch.radarTrail = data[11];
+        ch.twinkleHueMin = ((int)data[11] << 8) | data[12];
+        ch.gradientMoving = data[13] != 0;
+        ch.period = ((int)data[14] << 8) | data[15];
+        ch.direction = data[16] != 0;
+
+        // Make sure position state is valid
+        if (ch.position >= ch.numLEDs) ch.position = 0;
+
+        // Track number of channels
+        if (chIndex >= numChannels) numChannels = chIndex + 1;
+    }
+}
+

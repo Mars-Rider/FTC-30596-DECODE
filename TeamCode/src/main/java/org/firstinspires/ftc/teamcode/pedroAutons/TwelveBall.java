@@ -156,32 +156,23 @@ public class TwelveBall extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(resetRow1, true);
                     setPathState(4);
-                } else {
-                    if (robot.color(robot.pColor[0]) != 0 || robot.color(robot.pColor[0]) != 1) {
-                        robot.setOuttake(1, true);
-                    } else {
-                        robot.setOuttake(1, false);
-                    }
 
-                    if (robot.color(robot.gColor[0]) != 0 || robot.color(robot.gColor[0]) != 2) {
-                        robot.setOuttake(2, true);
-                    } else {
-                        robot.setOuttake(2, false);
-                    }
+                } else {
+                    robot.storePurple();
+                    robot.storeGreen();
                 }
                 break;
             case 4:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if (!follower.isBusy()) {
-                    robot.setOuttake(2, false);
-                    robot.setOuttake(2, false);
-
                     robot.autoSorting(false);
                     robot.intakePower(false);
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scoreRow1);
                     setPathState(5);
+                } else {
+                    robot.setNext();
                 }
                 break;
             case 5:
@@ -192,6 +183,8 @@ public class TwelveBall extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(setRow2, true);
                     setPathState(6);
+                } else {
+                    robot.setNext();
                 }
                 break;
             case 6:
@@ -212,31 +205,21 @@ public class TwelveBall extends OpMode {
                     follower.followPath(resetRow2);
                     setPathState(8);
                 } else {
-                    if (robot.color(robot.pColor[0]) != 0 || robot.color(robot.pColor[0]) != 1) {
-                        robot.setOuttake(1, true);
-                    } else {
-                        robot.setOuttake(1, false);
-                    }
-
-                    if (robot.color(robot.gColor[0]) != 0 || robot.color(robot.gColor[0]) != 2) {
-                        robot.setOuttake(2, true);
-                    } else {
-                        robot.setOuttake(2, false);
-                    }
+                    robot.storePurple();
+                    robot.storeGreen();
                 }
                 break;
             case 8:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
-                    robot.setOuttake(2, false);
-                    robot.setOuttake(2, false);
-
                     robot.autoSorting(false);
                     robot.intakePower(false);
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scoreRow2, true);
                     setPathState(9);
+                } else {
+                    robot.setNext();
                 }
                 break;
             case 9:
@@ -247,6 +230,8 @@ public class TwelveBall extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(setRow3);
                     setPathState(10);
+                } else {
+                    robot.setNext();
                 }
                 break;
             case 10:
@@ -267,31 +252,21 @@ public class TwelveBall extends OpMode {
                     follower.followPath(resetRow3);
                     setPathState(12);
                 } else {
-                    if (robot.color(robot.pColor[0]) != 0 || robot.color(robot.pColor[0]) != 1) {
-                        robot.setOuttake(1, true);
-                    } else {
-                        robot.setOuttake(1, false);
-                    }
-
-                    if (robot.color(robot.gColor[0]) != 0 || robot.color(robot.gColor[0]) != 2) {
-                        robot.setOuttake(2, true);
-                    } else {
-                        robot.setOuttake(2, false);
-                    }
+                    robot.storePurple();
+                    robot.storeGreen();
                 }
                 break;
             case 12:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
-                    robot.setOuttake(2, false);
-                    robot.setOuttake(2, false);
-
                     robot.autoSorting(false);
                     robot.intakePower(false);
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scoreRow3, true);
                     setPathState(13);
+                } else {
+                    robot.setNext();
                 }
                 break;
             case 13:
@@ -302,6 +277,9 @@ public class TwelveBall extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(park);
                     setPathState(14);
+                }
+                else {
+                    robot.setNext();
                 }
                 break;
             case 14:

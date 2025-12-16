@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.*;
 
-@TeleOp
+@TeleOp(name = "Sample", group = "LEDs")
 public class Example extends LinearOpMode{
     VoltageSensor voltageSensor;
     double voltMax = 13;
@@ -17,31 +17,45 @@ public class Example extends LinearOpMode{
         //Run at Initialization
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
+        //Makes new ledController
         LEDController ledController = new LEDController(hardwareMap,"LEDs");
-        LEDChannel strip1 = ledController.addChannel("voltage");
-        LEDChannel strip2 = ledController.addChannel("underglow");
 
-        strip2.setPattern(Pattern.RAINBOW);
+        //Adds a strip to the led controller
+        LEDChannel strip1 = ledController.addChannel(); //For Voltage - Adds a strip to index 1
+        LEDChannel strip2 = ledController.addChannel(); //For Underglow :) - Adds a strip to index 2
+        LEDChannel strip3 = ledController.addChannel(); //For State of Sensor/Controller - Adds a strip to index 3, etc.
 
-        strip1.setColor(Color.ORANGE);
-        strip1.setPattern(Pattern.SCANNER);
+        strip1.color.setValueRange(voltMin,voltMax,130, 0);
+        strip1.pattern.setScanner(10, true);
+
+        strip2.color.setRainbow();
+        strip2.pattern.setBreathe();
+
+        strip3.color.setOrange();
+        strip3.pattern.setSolid();
 
         waitForStart();
         //On Start
-        strip1.setColor(Color.GREEN);
-        strip1.setPattern(Pattern.SOLID);
+        strip1.color.setGreen();
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
             double currVolt = voltageSensor.getVoltage();
 
-            strip1.setHSL(Math.min(120,Math.max(0,((currVolt/voltMax)-voltMin)*120)),255,255);
+            strip1.color.updateValue(currVolt);
 
             if(currVolt < .5 + voltMin){
-                strip1.setPattern(Pattern.BLINK);
+                strip1.pattern.setBlink();
+            } else {
+                strip1.pattern.setSolid();
             }
 
+            if(gamepad1.a){
+                strip3.color.setBlue();
+            } else {
+                strip3.color.setPink();
+            }
         }
     }
 }
