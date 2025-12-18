@@ -1,0 +1,79 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LED Strip Dashboard</title>
+
+    <style>
+      body {
+        background: #0b0f14;
+        font-family: Inter, Arial, sans-serif;
+        color: #e6e6e6;
+        padding: 24px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        background: #121822;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #1f2937;
+      }
+
+      .card.disconnected {
+        opacity: 0.35;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .badges {
+        display: flex;
+        gap: 6px;
+      }
+
+      .badge {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 999px;
+        background: #1f2937;
+        border: 1px solid #374151;
+      }
+
+      .strip {
+        height: 16px;
+        border-radius: 8px;
+        background: #111;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #505050;
+      }
+
+      .strip::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>LED Strip Status</h1>
+    <div class="grid" id="grid"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

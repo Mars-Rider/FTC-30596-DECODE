@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode.Robot.LEDs;
+package Example;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.*;
+import LEDController.*;
 
 @TeleOp(name = "Sample", group = "LEDs")
 public class Example extends LinearOpMode{
@@ -26,7 +26,7 @@ public class Example extends LinearOpMode{
         LEDChannel strip3 = ledController.addChannel(); //For State of Sensor/Controller - Adds a strip to index 3, etc.
 
         strip1.color.setValueRange(voltMin,voltMax,130, 0);
-        strip1.pattern.setScanner(10, true);
+        strip1.pattern.setScanner(10, 5, true);
 
         strip2.color.setRainbow();
         strip2.pattern.setBreathe();
@@ -37,10 +37,13 @@ public class Example extends LinearOpMode{
         waitForStart();
         //On Start
         strip1.color.setGreen();
+        strip2.setBrightness(33.3);
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            strip2.setBrightness(100);
+
             double currVolt = voltageSensor.getVoltage();
 
             strip1.color.updateValue(currVolt);

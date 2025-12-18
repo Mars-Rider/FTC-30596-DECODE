@@ -4,7 +4,6 @@ import static android.os.SystemClock.sleep;
 
 import android.graphics.Color;
 
-import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -21,14 +20,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController;
-import org.firstinspires.ftc.teamcode.Robot.LEDs.LEDController.LEDChannel;
+import LEDController.*;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
