@@ -35,8 +35,11 @@ public class Scrimage extends LinearOpMode{
 
             robot.drivetrain.drive(robot.overide(gamepad1.left_stick_x,gamepad2.left_stick_x), -robot.overide(gamepad1.left_stick_y,gamepad2.left_stick_y), robot.overide(gamepad1.right_stick_x,gamepad2.right_stick_x));
 
-            if(robot.overide(gamepad1.xWasPressed(),gamepad2.xWasPressed())){robot.outtake(1);}
-            if(robot.overide(gamepad1.bWasPressed(),gamepad2.bWasPressed())){robot.outtake(2);}
+            if(robot.overide(gamepad1.xWasPressed(),gamepad2.xWasPressed())){robot.outtake(1, true);}
+            if(robot.overide(gamepad1.bWasPressed(),gamepad2.bWasPressed())){robot.outtake(2, true);}
+            if(robot.overide(gamepad1.xWasReleased(),gamepad2.xWasReleased())){robot.outtake(1, false);}
+            if(robot.overide(gamepad1.bWasReleased(),gamepad2.bWasReleased())){robot.outtake(2, false   );}
+
 
             //if(robot.overide(gamepad1.xWasReleased(),gamepad2.xWasReleased())){robot.outtake(0);}
             //if(robot.overide(gamepad1.bWasReleased(),gamepad2.bWasReleased())){robot.outtake(0);}

@@ -25,7 +25,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import LEDController.*;
+//import LEDController.*;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -44,8 +44,8 @@ public class Robot {
 
     public VoltageSensor voltageSensor;
 
-    public LEDController LEDs;
-    public LEDChannel flyLEDs;
+    //public LEDController LEDs;
+    //public LEDChannel flyLEDs;
 
     public boolean sortOn = false;//True is sorting
 
@@ -63,8 +63,8 @@ public class Robot {
 
     public boolean incremented = false;
 
-    private CRServo[] pRoll = new CRServo[2]; //Purple Ball Rollers
-    private CRServo[] gRoll = new CRServo[2]; //Green Ball Rollers
+    private DcMotor pRoll; //Purple Ball Rollers
+    private DcMotor gRoll; //Green Ball Rollers
     private double rollSpeed = 0.75; //Speed of the rollers
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 1; //Speed of intake
@@ -91,14 +91,11 @@ public class Robot {
         this.map = hardwareMap;
 
         //Flywheels
-        bFly = hardwareMap.get(DcMotorEx.class, "pFly");//0 E (Port 0, Expansion Hub Motors)
-        tFly = hardwareMap.get(DcMotorEx.class, "gFly");//1 E
+        bFly = hardwareMap.get(DcMotorEx.class, "gFly");//0 E (Port 0, Expansion Hub Motors)
 
         //Rollers
-        pRoll[0] = hardwareMap.get(CRServo.class, "pR1");//1 ES        pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
-        pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
-        gRoll[0] = hardwareMap.get(CRServo.class, "gR1");//5 C
-        gRoll[1] = hardwareMap.get(CRServo.class, "gR2");//0 C
+        pRoll = hardwareMap.get(DcMotor.class, "pR1");//1 ES        pRoll[1] = hardwareMap.get(CRServo.class, "pR2");//2 ES
+        gRoll = hardwareMap.get(DcMotor.class, "gR1");//5 C
 
         //Color Sensors
         pColor[0] = hardwareMap.get(NormalizedColorSensor.class, "pColor1");
@@ -126,15 +123,10 @@ public class Robot {
 
         intake.setDirection(DcMotor.Direction.REVERSE);
         bFly.setDirection(DcMotorEx.Direction.REVERSE);
-        tFly.setDirection(DcMotorEx.Direction.FORWARD);
-        for (CRServo servo:
-             pRoll) {
-            servo.setDirection(DcMotorSimple.Direction.REVERSE);
-        }
-        for (CRServo servo:
-                gRoll) {
-            servo.setDirection(DcMotorSimple.Direction.REVERSE);
-        }
+
+            pRoll.setDirection(DcMotorSimple.Direction.REVERSE); // if this is going the wrong way, make it forward
+
+            gRoll.setDirection(DcMotorSimple.Direction.REVERSE);
 
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //bFly.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
@@ -144,12 +136,11 @@ public class Robot {
         bFly.setMotorType(motorType);
         bFly.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         bFly.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        bFly.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        tFly.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         bFly.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-        tFly.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         //Huksy Lens
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
@@ -312,15 +303,15 @@ public class Robot {
 
     public void flyPower(boolean manual) { //True is on, false is off
         if(manual){//True is on
-                bFly.setVelocity(flySpeed, AngleUnit.RADIANS);
-                tFly.setVelocity(flySpeed, AngleUnit.RADIANS);
-//            bFly.setPower(flySpeed, AngleUnit.RADIANS);
+                //bFly.setVelocity(flySpeed, AngleUnit.RADIANS);
+                //tFly.setVelocity(flySpeed, AngleUnit.RADIANS);
+            bFly.setPower(flySpeed);
 //            tFly.setPower(flySpeed);
             fly = true;
         } else {
-                bFly.setVelocity(0);
-                tFly.setVelocity(0);
-//            bFly.setPower(0);
+                //bFly.setVelocity(0);
+                //tFly.setVelocity(0);
+            bFly.setPower(0);
 //            tFly.setPower(0);
             fly = false;
         }
@@ -342,12 +333,8 @@ public class Robot {
                 outtake(2, false);
             }
         } else if (color == 0) { // Turn off
-            for (CRServo servo : pRoll) {
-                servo.setPower(0);
-            }
-            for (CRServo servo : gRoll) {
-                servo.setPower(0);
-            }
+                pRoll.setPower(0);
+                gRoll.setPower(0);
 
             pOut = false;
             gOut = false;
@@ -357,35 +344,23 @@ public class Robot {
     public void outtake(int color, boolean manual) {
             if(color == 1) { //Purple
                 if(manual){
-                    for (CRServo servo : pRoll) {
-                        servo.setPower(rollSpeed);
-                    }
+                        pRoll.setPower(rollSpeed);
                     pOut = true;
                 } else {
-                    for (CRServo servo : pRoll) {
-                        servo.setPower(0);
-                    }
+                        pRoll.setPower(0);
                     pOut = false;
                 }
             } else if (color == 2) { // Green
                 if(manual){
-                    for (CRServo servo : gRoll) {
-                        servo.setPower(rollSpeed);
-                    }
+                        gRoll.setPower(rollSpeed);
                     gOut = true;
                 } else {
-                    for (CRServo servo : gRoll) {
-                        servo.setPower(0);
-                    }
+                        gRoll.setPower(0);
                     gOut = false;
                 }
             } else if (color == 0) { // Turn off
-                for (CRServo servo : pRoll) {
-                    servo.setPower(0);
-                }
-                for (CRServo servo : gRoll) {
-                    servo.setPower(0);
-                }
+                    pRoll.setPower(0);
+                    gRoll.setPower(0);
 
                 pOut = false;
                 gOut = false;
@@ -395,26 +370,18 @@ public class Robot {
     public void setOuttake(int color, boolean state){
         if(color == 1) { //Purple
             if(state){
-                for (CRServo servo : pRoll) {
-                    servo.setPower(rollSpeed);
-                }
+                pRoll.setPower(rollSpeed);
                 pOut = true;
             } else {
-                for (CRServo servo : pRoll) {
-                    servo.setPower(0);
-                }
+                pRoll.setPower(0);
                 pOut = false;
             }
         } else if (color == 2) { // Green
             if(state){
-                for (CRServo servo : gRoll) {
-                    servo.setPower(rollSpeed);
-                }
+                gRoll.setPower(rollSpeed);
                 gOut = true;
             } else {
-                for (CRServo servo : gRoll) {
-                    servo.setPower(0);
-                }
+                gRoll.setPower(0);
                 gOut = false;
             }
         }
