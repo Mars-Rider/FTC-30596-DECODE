@@ -186,6 +186,6 @@ public abstract class Drivetrain {
      *
      * @return this returns a String that contains the debug information for the drivetrain.
      */
-    public abstract String debugString();
+    //public abstract String debugString();
 
 }

@@ -58,16 +58,17 @@ public class Robot {
     // public int[] loaded = {0, 0, 0}; //Order of balls that are loaded - 0 = No ball, 1 = Purple, 2 = Green
 
     private boolean fly = false; //True = on
-    public double flySpeed = 67.5;
+    public static double flySpeed = 67.5;
     //public double flySpeed = 0.65;
 
     public boolean incremented = false;
 
+
     private DcMotor pRoll; //Purple Ball Rollers
     private DcMotor gRoll; //Green Ball Rollers
-    private double rollSpeed = 0.75; //Speed of the rollers
+    private double rollSpeed = 1; //Speed of the rollers
     private boolean intakeOn = false; //True = on
-    private double intakeSpeed = 1; //Speed of intake
+    private double intakeSpeed = .45; //Speed of intake
     public int intakeDirection = 1;
 
     public NormalizedColorSensor[] pColor = new NormalizedColorSensor[2];
@@ -296,9 +297,12 @@ public class Robot {
     } //Turn on and off power of flywheel
 
     public void adjustFlySpeed(){
-        if(fly){
-            flyPower(fly);
-        }
+
+        if (flySpeed > 100 ) flySpeed = 100;
+        else if (flySpeed < 0 ) flySpeed = 0;
+
+        if (fly) bFly.setPower(flySpeed/100.0);
+        else bFly.setPower(0);
     }
 
     public void flyPower(boolean manual) { //True is on, false is off

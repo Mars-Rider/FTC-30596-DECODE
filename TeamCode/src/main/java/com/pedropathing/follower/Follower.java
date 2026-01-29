@@ -1012,7 +1012,7 @@ public class Follower {
         info[0] = poseTracker.debugString();
         info[1] = errorCalculator.debugString();
         info[2] = vectorCalculator.debugString();
-        info[3] = drivetrain.debugString();
+        info[3] = ""; //drivetrain.debugString();
         return info;
     }
 

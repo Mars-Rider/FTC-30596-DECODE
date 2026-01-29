@@ -27,6 +27,8 @@ import java.util.function.Supplier;
 @TeleOp
 public class TeleOpMode extends OpMode {
     boolean lastTrigger = false;
+
+    boolean justPressedButton = false;
     Robot robot;
 
     @Override
@@ -84,11 +86,12 @@ public class TeleOpMode extends OpMode {
             robot.drivetrain.runTo(robot.faceGoalError());
         }
 
+        /*
         if (robot.overide(gamepad1.dpadUpWasPressed(),gamepad2.dpadUpWasPressed())){
             //Face Goal rn
             robot.estimatePower();
             robot.adjustFlySpeed();
-        }
+        }*/
 
         if (robot.overide(gamepad1.rightBumperWasPressed(), gamepad2.rightBumperWasPressed())){
             robot.flySpeed += Settings.flySpeedIncre;
@@ -100,6 +103,8 @@ public class TeleOpMode extends OpMode {
         } else if (!robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger))){
             lastTrigger = false;
         }
+
+        robot.adjustFlySpeed();
         telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
         telemetry.addLine("Sort On: "+ robot.sortOn);
         telemetry.addLine("fly encoder: "+ robot.bFly.getVelocity(AngleUnit.RADIANS));

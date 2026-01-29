@@ -70,7 +70,7 @@ public class Scrimage extends LinearOpMode{
             }
 
             if (robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger)) && !lastTrigger){
-                robot.flySpeed -= Settings.flySpeedIncre;
+                Robot.flySpeed -= Settings.flySpeedIncre;
                 robot.adjustFlySpeed();
                 lastTrigger = true;
             } else if (!robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger))){
@@ -83,16 +83,18 @@ public class Scrimage extends LinearOpMode{
             }
             
             if (robot.overide(gamepad1.rightBumperWasPressed(), gamepad2.rightBumperWasPressed())){
-                robot.flySpeed += Settings.flySpeedIncre;
+                Robot.flySpeed += Settings.flySpeedIncre;
                 robot.adjustFlySpeed();
             } else if (robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger)) && !lastTrigger){
-                robot.flySpeed -= Settings.flySpeedIncre;
+                Robot.flySpeed -= Settings.flySpeedIncre;
                 robot.adjustFlySpeed();
                 lastTrigger = true;
             } else if (!robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger))){
                 lastTrigger = false;
             }
-            telemetry.addLine("Fly Wheel Speed: "+ robot.flySpeed);
+            robot.adjustFlySpeed();
+
+            telemetry.addLine("Fly Wheel Speed: "+ Robot.flySpeed);
             telemetry.addLine("Sort On: "+ robot.sortOn);
             telemetry.addLine("fly encoder: "+ robot.bFly.getVelocity(AngleUnit.RADIANS));
         }
