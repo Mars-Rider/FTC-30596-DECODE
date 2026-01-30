@@ -68,7 +68,7 @@ public class Robot {
     private DcMotor gRoll; //Green Ball Rollers
     private double rollSpeed = 1; //Speed of the rollers
     private boolean intakeOn = false; //True = on
-    private double intakeSpeed = .45; //Speed of intake
+    private double intakeSpeed = 1; //Speed of intake
     public int intakeDirection = 1;
 
     public NormalizedColorSensor[] pColor = new NormalizedColorSensor[2];
@@ -485,15 +485,17 @@ public class Robot {
                 sensor = gColor[1];
             }
 
-            while((color(sensor) == 0 && checkFor(color))){//Wait for the fly sensor to detect a ball when there is aball
+            /*while((color(sensor) == 0 && checkFor(color))){//Wait for the fly sensor to detect a ball when there is aball
                 setNext(color);
                 sleep(50);
-            } //wait for sensor to enter the color sensor field if it is loaded
+            } //wait for sensor to enter the color sensor field if it is loaded*/
 
-            while(!checkForLeaveChannel(color)){//Wait for current ball to leave the outtake
+            sleep(1000);
+
+            /*while(!checkForLeaveChannel(color)){//Wait for current ball to leave the outtake
                 setNext(color);
                 sleep(50);
-            }
+            }*/
             outtake(color, false);
 
             sleepForFly(); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
@@ -644,11 +646,15 @@ public class Robot {
             //allianceID = llResult.getFiducialResults().get(1).getFiducialId();//Get second april tag, should be alliance tag
         }
 
+        double yaw = botPose.getOrientation().getYaw() + 90;
+
+        if(yaw >= 180){yaw -= 360;}
+
         if(Globals.opMode && botPose != null){
             Globals.startPose = new Pose(
                     (botPose.getPosition().y + 1.8288) * 39.3701,//Switch depending on the thing
                     (-botPose.getPosition().x + 1.8288) * 39.3701,
-                    Math.toRadians(botPose.getOrientation().getYaw()+90) //Adjust if the yaw is wrong
+                    Math.toRadians(yaw) //Adjust if the yaw is wrong
             );
         }
     } //Sets the code

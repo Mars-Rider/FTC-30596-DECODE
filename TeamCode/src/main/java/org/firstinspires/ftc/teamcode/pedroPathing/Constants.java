@@ -42,8 +42,8 @@ public class Constants {
             .leftFrontMotorName("LFB")
             .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)//Strafe and
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)//Strafe and
             .xVelocity(46.553280373812115)
             .yVelocity(67.22709803171244);
 
@@ -51,7 +51,7 @@ public class Constants {
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
             .forwardEncoder_HardwareMapName("LFB")
             .strafeEncoder_HardwareMapName("LRL")
-            .forwardEncoderDirection(Encoder.REVERSE)
+            .forwardEncoderDirection(Encoder.FORWARD)
             .strafeEncoderDirection(Encoder.REVERSE)
             .forwardPodY(0.95)//Inch
             .strafePodX(3)//Inch

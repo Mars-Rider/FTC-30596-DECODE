@@ -10,6 +10,7 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -56,9 +57,9 @@ public class Drivetrain {
             RFB = hardwareMap.get(DcMotor.class, "RFB");//1 C
 
             LRL.setDirection(DcMotor.Direction.REVERSE);
-            LFB.setDirection(DcMotor.Direction.REVERSE);
+            LFB.setDirection(DcMotor.Direction.FORWARD);
             RRL.setDirection(DcMotor.Direction.FORWARD);
-            RFB.setDirection(DcMotor.Direction.FORWARD);
+            RFB.setDirection(DcMotor.Direction.REVERSE);
 
             RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

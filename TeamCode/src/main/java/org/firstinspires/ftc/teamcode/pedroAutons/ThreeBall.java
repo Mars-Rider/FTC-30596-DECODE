@@ -103,7 +103,7 @@ public class ThreeBall extends OpMode {
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());//Change the heading by idk (180 or 90)
+        telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));//Change the heading by idk (180 or 90)
         telemetry.update();
 
         Globals.startPose = new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading());
