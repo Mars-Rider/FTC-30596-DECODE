@@ -18,6 +18,9 @@ public class Scrimage extends LinearOpMode{
         
         Robot robot = new Robot(hardwareMap, telemetry);
         robot.startDrivetrain();
+        //robot.readFieldData();
+
+        Robot.flySpeed = 67.5;
 
         //LEDChannel auxLEDs = robot.LEDs.addChannel("auxLEDs");
 
@@ -69,13 +72,13 @@ public class Scrimage extends LinearOpMode{
                 //robot.drivetrain.slowMode();
             }
 
-            if (robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger)) && !lastTrigger){
+            /*if (robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger)) && !lastTrigger){
                 Robot.flySpeed -= Settings.flySpeedIncre;
                 robot.adjustFlySpeed();
                 lastTrigger = true;
             } else if (!robot.overide(robot.triggerAsButton(gamepad1.right_trigger),robot.triggerAsButton(gamepad2.right_trigger))){
                 lastTrigger = false;
-            }
+            }*/
 
             if (gamepad1.dpad_down){
                 //Face Goal rn

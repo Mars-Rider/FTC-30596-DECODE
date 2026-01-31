@@ -309,7 +309,7 @@ public class Robot {
         if(manual){//True is on
                 //bFly.setVelocity(flySpeed, AngleUnit.RADIANS);
                 //tFly.setVelocity(flySpeed, AngleUnit.RADIANS);
-            bFly.setPower(flySpeed);
+            bFly.setPower(flySpeed/100);
 //            tFly.setPower(flySpeed);
             fly = true;
         } else {
@@ -468,11 +468,16 @@ public class Robot {
             code = new int[]{1,1,2};
         }
 
-        if(!fly){
+        flySpeed = 75;
+
+        flyPower(true);
+        sleep(2000);
+        /*if(!fly){
             flyPower(true);
             //waitForFly();
-            sleepForFly(-2.5);
-        }
+            //sleepForFly(-2.5);
+            sleep(1500);
+        }*/
 
         for (int color:code) {
             //waitForFly(); //before using, Disable all the sleeps in this function but the one between the outtake function calls
@@ -490,7 +495,7 @@ public class Robot {
                 sleep(50);
             } //wait for sensor to enter the color sensor field if it is loaded*/
 
-            sleep(1000);
+            sleep(750);
 
             /*while(!checkForLeaveChannel(color)){//Wait for current ball to leave the outtake
                 setNext(color);
@@ -498,7 +503,7 @@ public class Robot {
             }*/
             outtake(color, false);
 
-            sleepForFly(); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
+            //sleepForFly(); //Wait 500ms then do the next one - Change to wait until fly wheel is ready
         }
         sleep(150);
         flyPower(false);
