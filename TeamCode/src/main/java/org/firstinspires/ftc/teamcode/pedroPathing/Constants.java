@@ -17,13 +17,13 @@ public class Constants {
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .rightFrontMotorName("RFB")
-            .rightRearMotorName("RRL")
-            .leftRearMotorName("LRL")
-            .leftFrontMotorName("LFB")
+            .rightFrontMotorName("LRL") // rfb
+            .rightRearMotorName("LFB") // rrl
+            .leftRearMotorName("RFB") // lrl
+            .leftFrontMotorName("RRL") // lfb
             .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)//Strafe and
             .xVelocity(46.553280373812115)
             .yVelocity(67.22709803171244);

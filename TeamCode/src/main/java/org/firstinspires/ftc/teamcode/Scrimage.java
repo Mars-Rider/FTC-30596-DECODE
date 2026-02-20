@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.Robot.Globals;
 import org.firstinspires.ftc.teamcode.Robot.Robot;
 import org.firstinspires.ftc.teamcode.Robot.Settings;
 
-@TeleOp
+@TeleOp(name = "Scrimmage")
 public class Scrimage extends LinearOpMode{
 
     @Override
@@ -36,7 +36,7 @@ public class Scrimage extends LinearOpMode{
             robot.update();
             telemetry.update();
 
-            robot.drivetrain.drive(robot.overide(gamepad1.left_stick_x,gamepad2.left_stick_x), -robot.overide(gamepad1.left_stick_y,gamepad2.left_stick_y), robot.overide(gamepad1.right_stick_x,gamepad2.right_stick_x));
+            robot.drivetrain.drive(robot.overide(gamepad1.left_stick_x,gamepad2.left_stick_x), robot.overide(gamepad1.left_stick_y,gamepad2.left_stick_y), -robot.overide(gamepad1.right_stick_x,gamepad2.right_stick_x));
 
             if(robot.overide(gamepad1.xWasPressed(),gamepad2.xWasPressed())){robot.outtake(1, true);}
             if(robot.overide(gamepad1.bWasPressed(),gamepad2.bWasPressed())){robot.outtake(2, true);}

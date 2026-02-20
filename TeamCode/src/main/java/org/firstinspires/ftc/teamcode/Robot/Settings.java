@@ -1,13 +1,21 @@
 package org.firstinspires.ftc.teamcode.Robot;
 
-import com.bylazar.configurables.annotations.Configurable;
+import com.acmerobotics.dashboard.config.Config;
 
-@Configurable
+@Config
 public class Settings {
     public static double sortMid = 0.5;
     public static double sortInc = 0.2;
     public static double flySpeedIncre = 5;
     //public static double flySpeedIncre = 0.05;
+
+    public static boolean flipFR = false;
+    public static boolean flipFL = false;
+    public static boolean flipBR = false
+            ;
+    public static boolean flipBL = false;
+
+
 
     public static class powerEstimate {
         public static double flyXOffset = 4;

@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.Robot.Robot;
 
 import java.util.function.Supplier;
 
+
 public class Drivetrain {
     public HardwareMap map;
     public Telemetry telemetry;
@@ -56,10 +57,15 @@ public class Drivetrain {
             RRL = hardwareMap.get(DcMotor.class, "RRL");//3 C
             RFB = hardwareMap.get(DcMotor.class, "RFB");//1 C
 
-            LRL.setDirection(DcMotor.Direction.REVERSE);
+            LRL.setDirection(DcMotor.Direction.FORWARD);
             LFB.setDirection(DcMotor.Direction.FORWARD);
             RRL.setDirection(DcMotor.Direction.FORWARD);
-            RFB.setDirection(DcMotor.Direction.REVERSE);
+            RFB.setDirection(DcMotor.Direction.FORWARD);
+
+            if (Settings.flipFR) RFB.setDirection(DcMotorSimple.Direction.REVERSE);
+            if (Settings.flipBR) RRL.setDirection(DcMotorSimple.Direction.REVERSE);
+            if (Settings.flipFL) LFB.setDirection(DcMotorSimple.Direction.REVERSE);
+            if (Settings.flipBL) LRL.setDirection(DcMotorSimple.Direction.REVERSE);
 
             RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
