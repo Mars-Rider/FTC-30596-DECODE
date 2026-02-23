@@ -25,6 +25,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.Configs;
 //import LEDController.*;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -64,8 +65,8 @@ public class Robot {
     public boolean incremented = false;
 
 
-    private DcMotor pRoll; //Purple Ball Rollers
-    private DcMotor gRoll; //Green Ball Rollers
+    public DcMotor pRoll; //Purple Ball Rollers
+    public DcMotor gRoll; //Green Ball Rollers
     private double rollSpeed = 1; //Speed of the rollers
     private boolean intakeOn = false; //True = on
     private double intakeSpeed = 1; //Speed of intake
@@ -767,7 +768,7 @@ public class Robot {
             //flyLEDs.setColor(Color.BLUE);
         }
 
-        drivetrain.update();
+        // drivetrain.update();
     } //Put things to do in the loop here
 
     public static double changeAlliance(double input){
@@ -776,5 +777,31 @@ public class Robot {
         } else {
             return input;
         }
+    }
+
+    public void runFlywheelForDistance(double distance) {
+        runFlywheel(calculateFlywheelVel(distance));
+    }
+
+    public double calculateFlywheelVel(double distance) {
+        return Configs.a * distance * distance + Configs.b * distance + Configs.c;
+    }
+
+    public void runFlywheel(double vel) {
+
+        bFly.setVelocity(vel / 60.0 * (2*Math.PI), AngleUnit.RADIANS);
+    }
+
+    public double getFlywheelRPM() {
+        return bFly.getVelocity(AngleUnit.RADIANS) / (2*Math.PI) * 60.0;
+    }
+
+    public double getFlywheelTicks() {
+        return bFly.getCurrentPosition();
+    }
+
+    public double applyStaticFeedforward(double power, double feedforward) {
+        if (Math.abs(power) > 0) return (1 - feedforward) * power + Math.signum(power) * feedforward;
+        return 0;
     }
 }

@@ -17,14 +17,14 @@ public class Constants {
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .rightFrontMotorName("LRL") // rfb
-            .rightRearMotorName("LFB") // rrl
-            .leftRearMotorName("RFB") // lrl
-            .leftFrontMotorName("RRL") // lfb
-            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)//Strafe and
+            .rightFrontMotorName("RFB") // rfb
+            .rightRearMotorName("RRL") // rrl
+            .leftRearMotorName("LRL") // lrl
+            .leftFrontMotorName("LFB") // lfb
+            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD) // front left
+            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE) // back left
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE) // front right
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)// back right
             .xVelocity(46.553280373812115)
             .yVelocity(67.22709803171244);
 
@@ -40,7 +40,7 @@ public class Constants {
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                             RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             );

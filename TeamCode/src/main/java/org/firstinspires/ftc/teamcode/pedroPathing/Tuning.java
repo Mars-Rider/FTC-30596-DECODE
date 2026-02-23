@@ -46,7 +46,7 @@ public class Tuning extends SelectableOpMode {
 
     @IgnoreConfigurable
     static ArrayList<String> changes = new ArrayList<>();
-    `
+
     public Tuning() {
         super("Select a Tuning OpMode", s -> {
             s.folder("Localization", l -> {
@@ -154,7 +154,7 @@ class LocalizationTest extends OpMode {
      */
     @Override
     public void loop() {
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, true);
+        follower.setTeleOpDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, false);
         follower.update();
 
         telemetryM.debug("x:" + follower.getPose().getX());

@@ -194,7 +194,7 @@ public class TwoWheelLocalizer implements Localizer {
         forwardEncoder.update();
         strafeEncoder.update();
 
-        double currentIMUOrientation = MathFunctions.normalizeAngle(imu.getHeading());
+        double currentIMUOrientation = MathFunctions.normalizeAngle(imu.getHeading()); // cause its really messed up for some reason
         deltaRadians = MathFunctions.getTurnDirection(previousIMUOrientation, currentIMUOrientation) * MathFunctions.getSmallestAngleDifference(currentIMUOrientation, previousIMUOrientation);
         previousIMUOrientation = currentIMUOrientation;
     }

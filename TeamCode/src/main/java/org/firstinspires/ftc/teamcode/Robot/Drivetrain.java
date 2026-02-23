@@ -57,15 +57,17 @@ public class Drivetrain {
             RRL = hardwareMap.get(DcMotor.class, "RRL");//3 C
             RFB = hardwareMap.get(DcMotor.class, "RFB");//1 C
 
-            LRL.setDirection(DcMotor.Direction.FORWARD);
+
+            LRL.setDirection(DcMotor.Direction.REVERSE);
             LFB.setDirection(DcMotor.Direction.FORWARD);
             RRL.setDirection(DcMotor.Direction.FORWARD);
-            RFB.setDirection(DcMotor.Direction.FORWARD);
+            RFB.setDirection(DcMotor.Direction.REVERSE);
 
+            /*
             if (Settings.flipFR) RFB.setDirection(DcMotorSimple.Direction.REVERSE);
             if (Settings.flipBR) RRL.setDirection(DcMotorSimple.Direction.REVERSE);
             if (Settings.flipFL) LFB.setDirection(DcMotorSimple.Direction.REVERSE);
-            if (Settings.flipBL) LRL.setDirection(DcMotorSimple.Direction.REVERSE);
+            if (Settings.flipBL) LRL.setDirection(DcMotorSimple.Direction.REVERSE);*/
 
             RRL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             RFB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
